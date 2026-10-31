@@ -1,0 +1,7 @@
+data/
+.venv/
+*.model
+*.vocab
+__pycache__/
+results/*.log
+results/*.done
