@@ -1,0 +1,17 @@
+source                 rows   Mwords chars/row  dev%  licences
+sangraha             506098   180.65      3040    87  CC-BY-4.0
+indiccorp_v2         734626    21.69       264    88  CC0-1.0
+madlad400              3488     1.92      4863    86  ODC-By-1.0
+vagartha             109299     1.20        89    88  CC-BY-4.0
+hplt_v3                6653     1.03      1319    86  CC0-1.0
+itihasa               55862     0.64       100    89  Apache-2.0
+glotcc_v1               493     0.27      4675    87  CC0-1.0
+samayik                 218     0.22      7419    83  MIT
+mala_madlad400          668     0.17      2080    83  ODC-By-1.0
+dharma                  900     0.16      1712    86  CC-BY-4.0
+ambuda                 5412     0.10       141    88  CC0-1.0
+sarit                  4297     0.09       145    83  MIT
+subhashita_db          1595     0.02       124    90  CC-BY-4.0
+dcs                     461     0.00        60    84  CC-BY-4.0
+siddham                  41     0.00       694    84  CC-BY-4.0
+shrutilipi                4     0.00      1978    90  CC-BY-4.0
