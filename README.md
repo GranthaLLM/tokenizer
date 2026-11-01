@@ -1,78 +1,70 @@
 # Grantha tokenizer
 
-A joint Sanskrit (Devanagari) and English SentencePiece BPE tokenizer for GranthaLLM. It is trained on a text pool that excludes everything in [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus), so the corpus stays a clean evaluation set.
+A joint Sanskrit (Devanagari) and English SentencePiece BPE tokenizer for GranthaLLM. Its training text excludes everything in [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus) and every work used as a test set below, so the corpus stays a clean evaluation set.
 
-Status: v0 candidate. The numbers below are measured, the tokenizer is not yet frozen or released. See [Limits](#limits).
+Status: v0 candidate, 128k vocabulary. Measured, not yet frozen or released. See [Limits](#limits).
 
 ## Results
 
-Tokens per word on FLORES-200 devtest (1,012 sentences), lower is better.
+![Tokens per Sanskrit word on four benchmarks](results/fertility.svg)
 
-| tokenizer | Sanskrit | English | Sanskrit / English tokens |
-|---|---|---|---|
-| **Grantha joint 50/50, 128k** | **1.87** | **1.16** | 1.25 |
-| Grantha joint 50/50, 64k | 2.05 | 1.23 | 1.29 |
-| Grantha Sanskrit-only, 128k | 1.76 | 5.82 | n/a |
-| Gemma-3 | 2.83 | 1.24 | 1.77 |
-| Sarvam-1 | 2.98 | 1.43 | 1.61 |
-| Sarvam-M | 3.75 | 1.27 | 2.29 |
-| Llama-3 | 4.22 | 1.24 | 2.64 |
-| Qwen3 | 7.34 | 1.26 | 4.51 |
+This measures cost, not quality: fewer tokens per word is cheaper to process, and no model has been trained on the tokenizer yet. Grantha is trained on Sanskrit and English only, while the others are general multilingual tokenizers. Grantha needs about 33% fewer tokens than the best general-purpose tokenizers (Gemma 3 / 4, Mistral Large 4) on FLORES-200 and 44 to 48% fewer on the corpus and classical works. Against Param2, the closest India-focused rival, the gap is 19% on FLORES and 42 to 46% on the other three. The benchmarks:
 
-Full table with tokens per character and held-out columns: [`results/fertility_bilingual.md`](results/fertility_bilingual.md).
+- **FLORES-200 devtest:** 1,012 modern Sanskrit sentences.
+- **41 corpus works:** the Sanskrit of `corpus/` (1.46M words), inference only.
+- **DCS and GRETIL held-out works:** 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. The text is converted from IAST to Devanagari.
 
-Sandhi boundaries on [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (8,964 single-word gold splits). A cut counts if it falls at the gold point or one character after. Because a tokenizer that cuts more often scores higher by luck, the table also gives a random baseline with the same tokens per word.
+English is not sacrificed: 1.17 tokens per word on FLORES, against 1.24 for Gemma 3 / 4 and Llama-4, 1.26 for Qwen3.5, 1.27 for Mistral Large 4 and 1.49 for Param2. Sanskrit costs 1.25 times the tokens of its English translation, against 1.77 for Gemma.
+
+Full tables: [`results/fertility_bilingual.md`](results/fertility_bilingual.md) (FLORES, 30+ tokenizers), [`results/domain_check.md`](results/domain_check.md) (per corpus work), [`results/classical_eval.md`](results/classical_eval.md).
+
+Tokenizers not measured: Kimi K3 (its tokenizer needs custom code), Tiny Aya and Apertus (gated). Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+
+## Variants
+
+| training data | vocab | FLORES Sanskrit | FLORES English | DCS | GRETIL |
+|---|---|---|---|---|---|
+| web pool + DCS + GRETIL | 128k | 1.89 | 1.17 | 1.68 | 2.05 |
+| web pool + DCS | 128k | 1.87 | 1.16 | 1.71 | 2.15 |
+| web pool only | 128k | 1.87 | 1.16 | 1.75 | 2.17 |
+| web pool + DCS + GRETIL | 64k | 2.06 | 1.24 | 1.89 | 2.27 |
+| web pool only | 64k | 2.05 | 1.23 | 1.97 | 2.38 |
+
+The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Making the danda a standalone piece costs 2 to 5% more Sanskrit tokens.
+
+Adding DCS and GRETIL lowers classical fertility by 4 to 6% and costs almost nothing elsewhere. Your corpus works go from 1.99 to 1.98.
+
+## Sandhi boundaries
+
+[SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh), 8,964 single-word gold splits. A cut counts if it falls at the gold point or one character after. A tokenizer that cuts more often scores higher by luck, so the table includes a random baseline with the same cut count.
 
 | tokenizer | F1 | random F1 at same cut count | F1 above random |
 |---|---|---|---|
-| Grantha joint 128k | 0.416 | 0.235 | +0.18 |
-| Grantha joint 64k | 0.417 | 0.245 | +0.17 |
-| Gemma-3 | 0.368 | 0.279 | +0.09 |
+| Grantha 128k, web pool only | 0.416 | 0.235 | +0.18 |
+| Grantha 128k, + DCS + GRETIL | 0.407 | 0.235 | +0.17 |
+| Gemma 3 / 4 | 0.368 | 0.279 | +0.09 |
 | Sarvam-1 | 0.363 | 0.271 | +0.09 |
 
 The gold labels are the underlying split, so the cut position is approximated by common prefix. Treat the numbers as relative.
-
-Other findings:
-
-- The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs: Sanskrit 2.15, 2.05, 1.99; English 1.20, 1.23, 1.27).
-- Making the danda a standalone piece costs 2 to 5% more Sanskrit tokens.
-- The learned 128k vocabulary has no mixed-script or OCR-garbage pieces. A few pieces come from repeated headings, for example `द्वितीयोऽध्यायः`.
-- FLORES overlap with the training text was 1 Sanskrit and 123 English lines. They were removed.
 
 ## Training data
 
 | part | source | notes |
 |---|---|---|
-| Sanskrit | [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), permissive configs (CC0, CC-BY-4.0, ODC-By, MIT, Apache-2.0) | 2.31M lines, 186.6M words after cleaning. Mostly Sangraha and IndicCorp web and scan text |
-| English | Wikipedia (20231101.en, shard 0), FineWeb-Edu (sample/10BT shard 0) | 600M characters each before mixing |
+| Sanskrit, web | [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), permissive configs (CC0, CC-BY-4.0, ODC-By, MIT, Apache-2.0) | 2.31M lines, 186.6M words after cleaning. Mostly Sangraha and IndicCorp web and scan text |
+| Sanskrit, classical | [DCS](https://github.com/OliverHellwig/sanskrit) (CC BY 4.0), [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror) Sanskrit TEI files (CC BY-NC-SA 4.0) | 253 DCS works (3.0M words) and 738 GRETIL works (12.5M words) after holdout, `corpus/` overlap and duplicate removal. IAST converted to Devanagari with `tools/iast.py` |
+| English | Wikipedia (20231101.en, shard 0), FineWeb-Edu (sample/10BT shard 0) | 400M characters in the mix |
 
-Pool steps, in `tools/`: Unicode NFC and invisible-character stripping, a Devanagari-share filter, removal of any line that shares a 20-character window with a Sanskrit string in `corpus/` (about 4% of lines), then exact line deduplication. One line in 200 is held out.
+Cleaning: Unicode NFC, invisible characters stripped, a Devanagari-share filter, removal of any line sharing a 20-character window with `corpus/` Sanskrit (about 4% of lines) or with a held-out work, exact line deduplication. FLORES overlap with training text was 1 Sanskrit and 123 English lines, removed.
 
-Licence note: Wikipedia is CC BY-SA 4.0. The Sanskrit side is permissive only, the English side is not. Decide this before releasing the tokenizer.
+Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-NC-SA 4.0. This does not matter for internal benchmarking. It does for any public release of the +GRETIL variant.
 
 ## Limits
 
-- Sanskrit is measured on FLORES, which is modern news prose. No measurement yet on shastra or commentary text.
-- English is measured on FLORES only, not on Vedanta-style English.
-- The Sanskrit pool lacks the cleaner scholarly sources (DCS, GRETIL). Classical vocabulary is likely under-represented.
+- Fertility is a cost measure. No model has been trained with this tokenizer yet, so there is no quality result.
+- About 2% of training lines share a short phrase (a 20-character window) with `corpus/`. These are formulae, not passages.
+- DCS and GRETIL text is transliterated by our own converter and keeps editorial conventions such as `प्य् उक्तं`, so some of it is split at sandhi in a way fused text is not.
+- Tokens per word is a weak unit for Sanskrit because sandhi fuses words, and it is noisy on GRETIL because some files are set without spaces.
 - No `tokenizer.json`, special tokens or round-trip tests yet.
 - Digit splitting, NFC-only normalisation and danda handling were chosen, not ablated.
 - Parity-aware BPE and vocabulary extension of an existing tokenizer were not run.
-- Tokens per word is a weak unit for Sanskrit because sandhi fuses words. Per-character numbers are in the results table.
-
-## Layout
-
-```
-tools/
-  fetch_sansar.py, fetch_english.py   download data
-  profile_sansar.py                   per-source stats
-  common.py                           normalisation and line filters
-  holdout_index.py                    fingerprint corpus/ Sanskrit
-  build_pool.py                       clean, guard against corpus/, dedupe
-  split.py, make_sample.py            held-out slice, balanced training sample
-  train_spm.py                        Sanskrit-only BPE
-  make_mix.py, train_mix.py           joint Sanskrit and English BPE
-  measure.py                          tokens per word, baselines
-  sandhi_eval.py                      SandhiKosh boundary test
-results/                              committed tables
-```
