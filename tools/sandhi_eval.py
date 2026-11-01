@@ -104,7 +104,7 @@ def main():
     models = {
         "bpe_sa_128k": spm_bounds("data/tok_bpe_128k.model"),
         "mix50_128": spm_bounds("data/tok_mix50_128.model"),
-        "mix50_128_dd": spm_bounds("data/tok_mix50_128_dd.model"),
+        "v2_dcsgr_128": spm_bounds("data/tok_v2_dcsgr_128.model"),
         "mix50_64": spm_bounds("data/tok_mix50_64.model"),
     }
     for k, n in [("gemma3", "unsloth/gemma-3-4b-it"), ("sarvam1", "sarvamai/sarvam-1")]:

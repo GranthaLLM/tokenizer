@@ -16,6 +16,26 @@ HF = {
     "qwen3": "Qwen/Qwen3-8B",
     "sarvam1": "sarvamai/sarvam-1",
     "sarvam-m": "sarvamai/sarvam-m",
+    "gemma4": "google/gemma-4-12B-it",
+    "qwen3.5": "Qwen/Qwen3.5-9B",
+    "qwen3.8": "Qwen/Qwen3.8-Flash-Next",
+    "llama4": "unsloth/Llama-4-Scout-17B-16E-Instruct",
+    "deepseek-v4.1": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "kimi-k3": "moonshotai/Kimi-K3",
+    "glm-5.3": "zai-org/GLM-5.3",
+    "gpt-oss": "openai/gpt-oss-20b",
+    "mistral-large-4": "mistralai/Mistral-Large-4-1T-A52B",
+    "command-a-plus": "CohereLabs/command-a-plus-05-2026-bf16",
+    "tiny-aya": "CohereLabs/tiny-aya-global",
+    "apertus-1.5": "swiss-ai/Apertus-v1.5-8B",
+    "nemotron-3.5": "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16",
+    "granite-4.1": "ibm-granite/granite-4.1-3b",
+    "qwen3.6": "Qwen/Qwen3.6-27B",
+    "olmo-3": "allenai/Olmo-3-7B-Instruct",
+    "param2": "bharatgenai/Param2-17B-A2.4B-Thinking",
+    "krutrim-2": "krutrim-ai-labs/Krutrim-2-instruct",
+    "brahmic-131k": "theschoolofai/BrahmicTokenizer-131K",
+    "sarvam-30b": "sarvamai/sarvam-30b",
 }
 
 
@@ -25,7 +45,7 @@ def spm_enc(path):
 
 
 def hf_enc(name):
-    tk = AutoTokenizer.from_pretrained(name)
+    tk = AutoTokenizer.from_pretrained(name, trust_remote_code=False)
     return lambda s: len(tk.encode(s, add_special_tokens=False))
 
 
@@ -43,8 +63,10 @@ def main():
     for p in sorted(Path("data").glob("tok_*.model")):
         if not names or p.stem in names or "baselines" in names and p.stem.startswith("tok_bpe"):
             encs[p.stem] = spm_enc(str(p))
-    if not names or "baselines" in names:
+    if not names or "baselines" in names or any(n in HF for n in names):
         for k, v in HF.items():
+            if names and "baselines" not in names and k not in names:
+                continue
             try:
                 encs[k] = hf_enc(v)
             except Exception as e:
