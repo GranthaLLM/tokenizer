@@ -82,7 +82,7 @@ def main():
         ratio = sum(enc(x) for x in flores["san_Deva"]) / sum(enc(x) for x in flores["eng_Latn"])
         rows.append(f"| {k} | {s[0]:.2f} | {e[0]:.2f} | {ratio:.2f} | {s[1]:.3f} | {e[1]:.3f} | {h[0]:.2f} |")
         print(rows[-1], flush=True)
-    out = Path("results/fertility_bilingual.md")
+    out = Path("results/fertility_bilingual.md" if not names else "results/fertility_partial.md")
     out.write_text("\n".join(rows) + "\n")
 
 
