@@ -20,6 +20,22 @@ Full tables: [`results/fertility_bilingual.md`](results/fertility_bilingual.md) 
 
 Tokenizers not measured: Kimi K3 (its tokenizer needs custom code), Tiny Aya and Apertus (gated). Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
 
+## Example
+
+`नारायणं निखिलपूर्णगुणैकदेहम्` (Narayana, whose body is the sole home of every perfect quality). Two words, one long compound. Each `|` is a cut between tokens.
+
+| tokenizer | tokens | pieces |
+|---|---|---|
+| **Grantha 128k** | **7** | नारायणं \| निखिल \| पूर्ण \| गुण \| ैक \| दे \| हम् |
+| Param2 | 10 | नार \| ाय \| णं \| निख \| िल \| पूर्ण \| गुण \| ैक \| देह \| म् |
+| Gemma 3 / 4 | 10 | न \| ारा \| यण \| ं \| निखिल \| पूर्ण \| गुण \| ैक \| देह \| म् |
+| Sarvam-1 | 11 | नारायण \| ं \| नि \| ख \| िल \| पूर्ण \| गु \| ण \| ैक \| देह \| म् |
+| Mistral Large 4 | 14 | न \| ार \| ायण \| ं \| न \| िख \| िल \| पूर्ण \| गु \| ण \| ैक \| द \| ेह \| म् |
+| Llama-4 | 16 | न \| ार \| ाय \| ण \| ं \| न \| िख \| िल \| पूर्ण \| ग \| ुण \| ैक \| द \| ेह \| म \| ् |
+| Qwen3.5 | 17 | न \| ारा \| य \| ण \| ं \| नि \| ख \| िल \| पूर्ण \| ग \| ु \| ण \| ै \| क \| दे \| ह \| म् |
+
+Grantha keeps `नारायणं`, `निखिल`, `पूर्ण` and `गुण` whole, where the others break them into letters and bare vowel signs. It is not perfect on this line: `देहम्` is cut as `दे | हम्`, not `देह | म्`.
+
 ## Variants
 
 | training data | vocab | FLORES Sanskrit | FLORES English | DCS | GRETIL |
@@ -65,6 +81,7 @@ Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-
 - About 2% of training lines share a short phrase (a 20-character window) with `corpus/`. These are formulae, not passages.
 - DCS and GRETIL text is transliterated by our own converter and keeps editorial conventions such as `प्य् उक्तं`, so some of it is split at sandhi in a way fused text is not.
 - Tokens per word is a weak unit for Sanskrit because sandhi fuses words, and it is noisy on GRETIL because some files are set without spaces.
+- Long compounds are the weak spot. On 258k compounds from held-out DCS works only about 43% of our cuts land on a true word boundary (F1 0.50, against 0.34 for Gemma and 0.20 for Param2, see `results/compound_eval.md`). Ordinary words are fine: 71% stay whole.
 - No `tokenizer.json`, special tokens or round-trip tests yet.
 - Digit splitting, NFC-only normalisation and danda handling were chosen, not ablated.
 - Parity-aware BPE and vocabulary extension of an existing tokenizer were not run.
