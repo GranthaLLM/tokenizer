@@ -3,7 +3,6 @@ from pathlib import Path
 R = Path("results")
 ORDER = [
     ("Grantha 128k", "tok_v2_dcsgr_128", "dcsgr_128", True),
-    ("Grantha, web only", "tok_v2_none_128", "none_128", "alt"),
     ("Param2", "param2", "param2", False),
     ("Gemma 3 / 4", "gemma4", "gemma4", False),
     ("Mistral Large 4", "mistral-large-4", "mistral4", False),
@@ -59,7 +58,7 @@ out = [
     "@media (prefers-color-scheme:dark){text{fill:#e6edf3}.mut{fill:#9198a1}.grid{stroke:#3d444d}.us{fill:#8b9bff}.alt{fill:#5a64a8}.them{fill:#59636e}}",
     "</style>",
     f'<text x="20" y="24" class="t">Tokens per Sanskrit word (cost, lower is better)</text>',
-    f'<text x="20" y="44" class="mut">Grantha: 128k joint Sanskrit and English tokenizer. Second bar: same tokenizer trained without DCS and GRETIL.</text>',
+    f'<text x="20" y="44" class="mut">Grantha: 128k joint Sanskrit and English tokenizer.</text>',
 ]
 for pi, (title, vals) in enumerate(PANELS):
     ox = 20 + (pi % 2) * (PW + GAP)
@@ -80,7 +79,7 @@ for pi, (title, vals) in enumerate(PANELS):
         out.append(f'<text x="{x(v)+5:.1f}" y="{y+11}" class="mut">{v:.2f}</text>')
 notes = [
     "Grantha is trained on Sanskrit and English only. The others are general multilingual tokenizers.",
-    "On DCS and GRETIL, the top Grantha bar also trained on other works from those collections.",
+    "On DCS and GRETIL, Grantha also trained on other works from those collections.",
     "Fewer tokens is cheaper to process, not necessarily better quality. No model has been trained on it yet.",
 ]
 for i, n in enumerate(notes):

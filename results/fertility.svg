@@ -1,144 +1,132 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 612" width="800" height="612" role="img" aria-label="Sanskrit tokens per word on four benchmarks, Grantha 128k against six other tokenizers">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 568" width="800" height="568" role="img" aria-label="Sanskrit tokens per word on four benchmarks, Grantha 128k against six other tokenizers">
 <style>
 text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12.5px;fill:#1f2328}
 .mut{fill:#59636e}.grid{stroke:#d1d9e0;stroke-width:1}.us{fill:#3d4fc4}.alt{fill:#8d99dd}.them{fill:#9aa5b1}.b{font-weight:600}.t{font-size:15px;font-weight:600}.h{font-size:13px;font-weight:600}
 @media (prefers-color-scheme:dark){text{fill:#e6edf3}.mut{fill:#9198a1}.grid{stroke:#3d444d}.us{fill:#8b9bff}.alt{fill:#5a64a8}.them{fill:#59636e}}
 </style>
 <text x="20" y="24" class="t">Tokens per Sanskrit word (cost, lower is better)</text>
-<text x="20" y="44" class="mut">Grantha: 128k joint Sanskrit and English tokenizer. Second bar: same tokenizer trained without DCS and GRETIL.</text>
+<text x="20" y="44" class="mut">Grantha: 128k joint Sanskrit and English tokenizer.</text>
 <text x="20" y="78" class="h">FLORES-200 devtest</text>
-<line x1="118.0" y1="88" x2="118.0" y2="264" class="grid"/>
-<text x="118.0" y="278" text-anchor="middle" class="mut">0</text>
-<line x1="190.7" y1="88" x2="190.7" y2="264" class="grid"/>
-<text x="190.7" y="278" text-anchor="middle" class="mut">2</text>
-<line x1="263.3" y1="88" x2="263.3" y2="264" class="grid"/>
-<text x="263.3" y="278" text-anchor="middle" class="mut">4</text>
-<line x1="336.0" y1="88" x2="336.0" y2="264" class="grid"/>
-<text x="336.0" y="278" text-anchor="middle" class="mut">6</text>
+<line x1="118.0" y1="88" x2="118.0" y2="242" class="grid"/>
+<text x="118.0" y="256" text-anchor="middle" class="mut">0</text>
+<line x1="190.7" y1="88" x2="190.7" y2="242" class="grid"/>
+<text x="190.7" y="256" text-anchor="middle" class="mut">2</text>
+<line x1="263.3" y1="88" x2="263.3" y2="242" class="grid"/>
+<text x="263.3" y="256" text-anchor="middle" class="mut">4</text>
+<line x1="336.0" y1="88" x2="336.0" y2="242" class="grid"/>
+<text x="336.0" y="256" text-anchor="middle" class="mut">6</text>
 <text x="110" y="103" text-anchor="end" class="b">Grantha 128k</text>
 <rect x="118" y="92" width="68.7" height="14" class="us"/>
 <text x="191.7" y="103" class="mut">1.89</text>
-<text x="110" y="125" text-anchor="end">Grantha, web only</text>
-<rect x="118" y="114" width="67.9" height="14" class="alt"/>
-<text x="190.9" y="125" class="mut">1.87</text>
-<text x="110" y="147" text-anchor="end">Param2</text>
-<rect x="118" y="136" width="84.3" height="14" class="them"/>
-<text x="207.3" y="147" class="mut">2.32</text>
-<text x="110" y="169" text-anchor="end">Gemma 3 / 4</text>
-<rect x="118" y="158" width="102.8" height="14" class="them"/>
-<text x="225.8" y="169" class="mut">2.83</text>
-<text x="110" y="191" text-anchor="end">Mistral Large 4</text>
-<rect x="118" y="180" width="105.4" height="14" class="them"/>
-<text x="228.4" y="191" class="mut">2.90</text>
-<text x="110" y="213" text-anchor="end">Sarvam-1</text>
-<rect x="118" y="202" width="108.3" height="14" class="them"/>
-<text x="231.3" y="213" class="mut">2.98</text>
-<text x="110" y="235" text-anchor="end">Llama-4</text>
-<rect x="118" y="224" width="126.4" height="14" class="them"/>
-<text x="249.4" y="235" class="mut">3.48</text>
-<text x="110" y="257" text-anchor="end">Qwen3.5</text>
-<rect x="118" y="246" width="153.7" height="14" class="them"/>
-<text x="276.7" y="257" class="mut">4.23</text>
+<text x="110" y="125" text-anchor="end">Param2</text>
+<rect x="118" y="114" width="84.3" height="14" class="them"/>
+<text x="207.3" y="125" class="mut">2.32</text>
+<text x="110" y="147" text-anchor="end">Gemma 3 / 4</text>
+<rect x="118" y="136" width="102.8" height="14" class="them"/>
+<text x="225.8" y="147" class="mut">2.83</text>
+<text x="110" y="169" text-anchor="end">Mistral Large 4</text>
+<rect x="118" y="158" width="105.4" height="14" class="them"/>
+<text x="228.4" y="169" class="mut">2.90</text>
+<text x="110" y="191" text-anchor="end">Sarvam-1</text>
+<rect x="118" y="180" width="108.3" height="14" class="them"/>
+<text x="231.3" y="191" class="mut">2.98</text>
+<text x="110" y="213" text-anchor="end">Llama-4</text>
+<rect x="118" y="202" width="126.4" height="14" class="them"/>
+<text x="249.4" y="213" class="mut">3.48</text>
+<text x="110" y="235" text-anchor="end">Qwen3.5</text>
+<rect x="118" y="224" width="153.7" height="14" class="them"/>
+<text x="276.7" y="235" class="mut">4.23</text>
 <text x="420" y="78" class="h">41 corpus works</text>
-<line x1="518.0" y1="88" x2="518.0" y2="264" class="grid"/>
-<text x="518.0" y="278" text-anchor="middle" class="mut">0</text>
-<line x1="590.7" y1="88" x2="590.7" y2="264" class="grid"/>
-<text x="590.7" y="278" text-anchor="middle" class="mut">2</text>
-<line x1="663.3" y1="88" x2="663.3" y2="264" class="grid"/>
-<text x="663.3" y="278" text-anchor="middle" class="mut">4</text>
-<line x1="736.0" y1="88" x2="736.0" y2="264" class="grid"/>
-<text x="736.0" y="278" text-anchor="middle" class="mut">6</text>
+<line x1="518.0" y1="88" x2="518.0" y2="242" class="grid"/>
+<text x="518.0" y="256" text-anchor="middle" class="mut">0</text>
+<line x1="590.7" y1="88" x2="590.7" y2="242" class="grid"/>
+<text x="590.7" y="256" text-anchor="middle" class="mut">2</text>
+<line x1="663.3" y1="88" x2="663.3" y2="242" class="grid"/>
+<text x="663.3" y="256" text-anchor="middle" class="mut">4</text>
+<line x1="736.0" y1="88" x2="736.0" y2="242" class="grid"/>
+<text x="736.0" y="256" text-anchor="middle" class="mut">6</text>
 <text x="510" y="103" text-anchor="end" class="b">Grantha 128k</text>
 <rect x="518" y="92" width="71.9" height="14" class="us"/>
 <text x="594.9" y="103" class="mut">1.98</text>
-<text x="510" y="125" text-anchor="end">Grantha, web only</text>
-<rect x="518" y="114" width="72.3" height="14" class="alt"/>
-<text x="595.3" y="125" class="mut">1.99</text>
-<text x="510" y="147" text-anchor="end">Param2</text>
-<rect x="518" y="136" width="124.6" height="14" class="them"/>
-<text x="647.6" y="147" class="mut">3.43</text>
-<text x="510" y="169" text-anchor="end">Gemma 3 / 4</text>
-<rect x="518" y="158" width="128.3" height="14" class="them"/>
-<text x="651.3" y="169" class="mut">3.53</text>
-<text x="510" y="191" text-anchor="end">Mistral Large 4</text>
-<rect x="518" y="180" width="130.8" height="14" class="them"/>
-<text x="653.8" y="191" class="mut">3.60</text>
-<text x="510" y="213" text-anchor="end">Sarvam-1</text>
-<rect x="518" y="202" width="144.2" height="14" class="them"/>
-<text x="667.2" y="213" class="mut">3.97</text>
-<text x="510" y="235" text-anchor="end">Llama-4</text>
-<rect x="518" y="224" width="157.7" height="14" class="them"/>
-<text x="680.7" y="235" class="mut">4.34</text>
-<text x="510" y="257" text-anchor="end">Qwen3.5</text>
-<rect x="518" y="246" width="183.8" height="14" class="them"/>
-<text x="706.8" y="257" class="mut">5.06</text>
-<text x="20" y="310" class="h">DCS held-out works</text>
-<line x1="118.0" y1="320" x2="118.0" y2="496" class="grid"/>
-<text x="118.0" y="510" text-anchor="middle" class="mut">0</text>
-<line x1="190.7" y1="320" x2="190.7" y2="496" class="grid"/>
-<text x="190.7" y="510" text-anchor="middle" class="mut">2</text>
-<line x1="263.3" y1="320" x2="263.3" y2="496" class="grid"/>
-<text x="263.3" y="510" text-anchor="middle" class="mut">4</text>
-<line x1="336.0" y1="320" x2="336.0" y2="496" class="grid"/>
-<text x="336.0" y="510" text-anchor="middle" class="mut">6</text>
-<text x="110" y="335" text-anchor="end" class="b">Grantha 128k</text>
-<rect x="118" y="324" width="61.0" height="14" class="us"/>
-<text x="184.0" y="335" class="mut">1.68</text>
-<text x="110" y="357" text-anchor="end">Grantha, web only</text>
-<rect x="118" y="346" width="63.6" height="14" class="alt"/>
-<text x="186.6" y="357" class="mut">1.75</text>
-<text x="110" y="379" text-anchor="end">Param2</text>
-<rect x="118" y="368" width="109.0" height="14" class="them"/>
-<text x="232.0" y="379" class="mut">3.00</text>
-<text x="110" y="401" text-anchor="end">Gemma 3 / 4</text>
-<rect x="118" y="390" width="117.0" height="14" class="them"/>
-<text x="240.0" y="401" class="mut">3.22</text>
-<text x="110" y="423" text-anchor="end">Mistral Large 4</text>
-<rect x="118" y="412" width="121.4" height="14" class="them"/>
-<text x="244.4" y="423" class="mut">3.34</text>
-<text x="110" y="445" text-anchor="end">Sarvam-1</text>
-<rect x="118" y="434" width="124.3" height="14" class="them"/>
-<text x="247.3" y="445" class="mut">3.42</text>
-<text x="110" y="467" text-anchor="end">Llama-4</text>
-<rect x="118" y="456" width="144.6" height="14" class="them"/>
-<text x="267.6" y="467" class="mut">3.98</text>
-<text x="110" y="489" text-anchor="end">Qwen3.5</text>
-<rect x="118" y="478" width="162.4" height="14" class="them"/>
-<text x="285.4" y="489" class="mut">4.47</text>
-<text x="420" y="310" class="h">GRETIL held-out works</text>
-<line x1="518.0" y1="320" x2="518.0" y2="496" class="grid"/>
-<text x="518.0" y="510" text-anchor="middle" class="mut">0</text>
-<line x1="590.7" y1="320" x2="590.7" y2="496" class="grid"/>
-<text x="590.7" y="510" text-anchor="middle" class="mut">2</text>
-<line x1="663.3" y1="320" x2="663.3" y2="496" class="grid"/>
-<text x="663.3" y="510" text-anchor="middle" class="mut">4</text>
-<line x1="736.0" y1="320" x2="736.0" y2="496" class="grid"/>
-<text x="736.0" y="510" text-anchor="middle" class="mut">6</text>
-<text x="510" y="335" text-anchor="end" class="b">Grantha 128k</text>
-<rect x="518" y="324" width="74.5" height="14" class="us"/>
-<text x="597.5" y="335" class="mut">2.05</text>
-<text x="510" y="357" text-anchor="end">Grantha, web only</text>
-<rect x="518" y="346" width="78.8" height="14" class="alt"/>
-<text x="601.8" y="357" class="mut">2.17</text>
-<text x="510" y="379" text-anchor="end">Param2</text>
-<rect x="518" y="368" width="137.3" height="14" class="them"/>
-<text x="660.3" y="379" class="mut">3.78</text>
-<text x="510" y="401" text-anchor="end">Gemma 3 / 4</text>
-<rect x="518" y="390" width="138.8" height="14" class="them"/>
-<text x="661.8" y="401" class="mut">3.82</text>
-<text x="510" y="423" text-anchor="end">Mistral Large 4</text>
-<rect x="518" y="412" width="144.2" height="14" class="them"/>
-<text x="667.2" y="423" class="mut">3.97</text>
-<text x="510" y="445" text-anchor="end">Sarvam-1</text>
-<rect x="518" y="434" width="153.0" height="14" class="them"/>
-<text x="676.0" y="445" class="mut">4.21</text>
-<text x="510" y="467" text-anchor="end">Llama-4</text>
-<rect x="518" y="456" width="169.7" height="14" class="them"/>
-<text x="692.7" y="467" class="mut">4.67</text>
-<text x="510" y="489" text-anchor="end">Qwen3.5</text>
-<rect x="518" y="478" width="197.3" height="14" class="them"/>
-<text x="720.3" y="489" class="mut">5.43</text>
-<text x="20" y="564" class="mut">Grantha is trained on Sanskrit and English only. The others are general multilingual tokenizers.</text>
-<text x="20" y="580" class="mut">On DCS and GRETIL, the top Grantha bar also trained on other works from those collections.</text>
-<text x="20" y="596" class="mut">Fewer tokens is cheaper to process, not necessarily better quality. No model has been trained on it yet.</text>
+<text x="510" y="125" text-anchor="end">Param2</text>
+<rect x="518" y="114" width="124.6" height="14" class="them"/>
+<text x="647.6" y="125" class="mut">3.43</text>
+<text x="510" y="147" text-anchor="end">Gemma 3 / 4</text>
+<rect x="518" y="136" width="128.3" height="14" class="them"/>
+<text x="651.3" y="147" class="mut">3.53</text>
+<text x="510" y="169" text-anchor="end">Mistral Large 4</text>
+<rect x="518" y="158" width="130.8" height="14" class="them"/>
+<text x="653.8" y="169" class="mut">3.60</text>
+<text x="510" y="191" text-anchor="end">Sarvam-1</text>
+<rect x="518" y="180" width="144.2" height="14" class="them"/>
+<text x="667.2" y="191" class="mut">3.97</text>
+<text x="510" y="213" text-anchor="end">Llama-4</text>
+<rect x="518" y="202" width="157.7" height="14" class="them"/>
+<text x="680.7" y="213" class="mut">4.34</text>
+<text x="510" y="235" text-anchor="end">Qwen3.5</text>
+<rect x="518" y="224" width="183.8" height="14" class="them"/>
+<text x="706.8" y="235" class="mut">5.06</text>
+<text x="20" y="288" class="h">DCS held-out works</text>
+<line x1="118.0" y1="298" x2="118.0" y2="452" class="grid"/>
+<text x="118.0" y="466" text-anchor="middle" class="mut">0</text>
+<line x1="190.7" y1="298" x2="190.7" y2="452" class="grid"/>
+<text x="190.7" y="466" text-anchor="middle" class="mut">2</text>
+<line x1="263.3" y1="298" x2="263.3" y2="452" class="grid"/>
+<text x="263.3" y="466" text-anchor="middle" class="mut">4</text>
+<line x1="336.0" y1="298" x2="336.0" y2="452" class="grid"/>
+<text x="336.0" y="466" text-anchor="middle" class="mut">6</text>
+<text x="110" y="313" text-anchor="end" class="b">Grantha 128k</text>
+<rect x="118" y="302" width="61.0" height="14" class="us"/>
+<text x="184.0" y="313" class="mut">1.68</text>
+<text x="110" y="335" text-anchor="end">Param2</text>
+<rect x="118" y="324" width="109.0" height="14" class="them"/>
+<text x="232.0" y="335" class="mut">3.00</text>
+<text x="110" y="357" text-anchor="end">Gemma 3 / 4</text>
+<rect x="118" y="346" width="117.0" height="14" class="them"/>
+<text x="240.0" y="357" class="mut">3.22</text>
+<text x="110" y="379" text-anchor="end">Mistral Large 4</text>
+<rect x="118" y="368" width="121.4" height="14" class="them"/>
+<text x="244.4" y="379" class="mut">3.34</text>
+<text x="110" y="401" text-anchor="end">Sarvam-1</text>
+<rect x="118" y="390" width="124.3" height="14" class="them"/>
+<text x="247.3" y="401" class="mut">3.42</text>
+<text x="110" y="423" text-anchor="end">Llama-4</text>
+<rect x="118" y="412" width="144.6" height="14" class="them"/>
+<text x="267.6" y="423" class="mut">3.98</text>
+<text x="110" y="445" text-anchor="end">Qwen3.5</text>
+<rect x="118" y="434" width="162.4" height="14" class="them"/>
+<text x="285.4" y="445" class="mut">4.47</text>
+<text x="420" y="288" class="h">GRETIL held-out works</text>
+<line x1="518.0" y1="298" x2="518.0" y2="452" class="grid"/>
+<text x="518.0" y="466" text-anchor="middle" class="mut">0</text>
+<line x1="590.7" y1="298" x2="590.7" y2="452" class="grid"/>
+<text x="590.7" y="466" text-anchor="middle" class="mut">2</text>
+<line x1="663.3" y1="298" x2="663.3" y2="452" class="grid"/>
+<text x="663.3" y="466" text-anchor="middle" class="mut">4</text>
+<line x1="736.0" y1="298" x2="736.0" y2="452" class="grid"/>
+<text x="736.0" y="466" text-anchor="middle" class="mut">6</text>
+<text x="510" y="313" text-anchor="end" class="b">Grantha 128k</text>
+<rect x="518" y="302" width="74.5" height="14" class="us"/>
+<text x="597.5" y="313" class="mut">2.05</text>
+<text x="510" y="335" text-anchor="end">Param2</text>
+<rect x="518" y="324" width="137.3" height="14" class="them"/>
+<text x="660.3" y="335" class="mut">3.78</text>
+<text x="510" y="357" text-anchor="end">Gemma 3 / 4</text>
+<rect x="518" y="346" width="138.8" height="14" class="them"/>
+<text x="661.8" y="357" class="mut">3.82</text>
+<text x="510" y="379" text-anchor="end">Mistral Large 4</text>
+<rect x="518" y="368" width="144.2" height="14" class="them"/>
+<text x="667.2" y="379" class="mut">3.97</text>
+<text x="510" y="401" text-anchor="end">Sarvam-1</text>
+<rect x="518" y="390" width="153.0" height="14" class="them"/>
+<text x="676.0" y="401" class="mut">4.21</text>
+<text x="510" y="423" text-anchor="end">Llama-4</text>
+<rect x="518" y="412" width="169.7" height="14" class="them"/>
+<text x="692.7" y="423" class="mut">4.67</text>
+<text x="510" y="445" text-anchor="end">Qwen3.5</text>
+<rect x="518" y="434" width="197.3" height="14" class="them"/>
+<text x="720.3" y="445" class="mut">5.43</text>
+<text x="20" y="520" class="mut">Grantha is trained on Sanskrit and English only. The others are general multilingual tokenizers.</text>
+<text x="20" y="536" class="mut">On DCS and GRETIL, Grantha also trained on other works from those collections.</text>
+<text x="20" y="552" class="mut">Fewer tokens is cheaper to process, not necessarily better quality. No model has been trained on it yet.</text>
 </svg>
