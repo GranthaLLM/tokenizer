@@ -86,6 +86,26 @@ Adding DCS and GRETIL lowers classical fertility by 4 to 6% and costs almost not
 
 The gold labels are the underlying split, so the cut position is approximated by common prefix. Treat the numbers as relative.
 
+## Compound boundaries
+
+Sanskrit compounds and sandhi hide where words end, and plain BPE cuts at frequent letter strings instead. We measure this on 238,889 compounds from 18 DCS works held out of every training source. A cut counts as right if it is at, or next to, the true boundary at an akshara edge, because sandhi can fuse a vowel into the letter before it.
+
+| tokenizer | cuts that are right | true boundaries respected | F1 | tokens per word, FLORES / DCS / GRETIL |
+|---|---|---|---|---|
+| Grantha 128k | 0.585 | 76.5% | 0.663 | 1.89 / 1.68 / 2.05 |
+| Grantha 128k + boundary tagger | 0.707 | 99.1% | 0.825 | 1.93 / 1.75 / 2.23 |
+| Gemma 3 / 4 | 0.295 | 90.0% | 0.445 | 2.83 / 3.22 / 3.82 |
+| Param2 | 0.204 | 62.5% | 0.308 | 2.32 / 3.00 / 3.78 |
+
+The boundary tagger variant puts an invisible mark at compound and sandhi joints before tokenization, and BPE is trained so no piece crosses a mark. The marks are dropped from the output, so decoding returns the original text. The tagger is a small character model trained on DCS gold splits and on labels from [ByT5-Sanskrit](https://aclanthology.org/2024.findings-emnlp.805.pdf) for 263k Vedanta-style, Bhagavata and pool words. The tokenizer then also needs the tagger at use time.
+
+Known gaps:
+
+- A piece can still hold a fused akshara together with its neighbour: `ईहा नियति` comes out as `हानि | यति`, because the vowel fuses into `हा`.
+- The tagger is a student of ByT5-Sanskrit and misses some very long compounds. ByT5-Sanskrit itself splits them correctly but runs at about 35 to 90 words per second on a laptop.
+- DCS is mostly epic and Purana text, and the labels outside it come from ByT5, not from people. There is no human-checked Vedanta compound test yet.
+- UoH sandhi splits mark only sandhi joints, not whole compounds, so they were not used as gold for compounds.
+
 ## Training data
 
 | part | source | notes |
@@ -104,7 +124,7 @@ Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-
 - About 2% of training lines share a short phrase (a 20-character window) with `corpus/`. These are formulae, not passages.
 - DCS and GRETIL text is transliterated by our own converter and keeps editorial conventions such as `प्य् उक्तं`, so some of it is split at sandhi in a way fused text is not.
 - Tokens per word is a weak unit for Sanskrit because sandhi fuses words, and it is noisy on GRETIL because some files are set without spaces.
-- Long compounds are the weak spot. On 258k compounds from held-out DCS works only about 43% of our cuts land on a true word boundary (F1 0.50, against 0.34 for Gemma and 0.20 for Param2, see `results/compound_eval.md`). Ordinary words are fine: 71% stay whole.
+- Long compounds are the weak spot (see Compound boundaries). Ordinary words are fine: 71% stay whole.
 - No `tokenizer.json`, special tokens or round-trip tests yet.
 - Digit splitting, NFC-only normalisation and danda handling were chosen, not ablated.
 - Parity-aware BPE and vocabulary extension of an existing tokenizer were not run.
