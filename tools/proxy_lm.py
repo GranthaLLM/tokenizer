@@ -31,6 +31,12 @@ class GPT(nn.Module):
         self.tok, self.pos = nn.Embedding(vocab, d), nn.Embedding(ctx, d)
         self.blocks = nn.ModuleList([Block(d, heads) for _ in range(layers)])
         self.ln = nn.LayerNorm(d)
+        self.apply(self._init)
+
+    @staticmethod
+    def _init(m):
+        if isinstance(m, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(m.weight, mean=0.0, std=0.02)
 
     def forward(self, x):
         h = self.tok(x) + self.pos(torch.arange(x.shape[1], device=x.device))
