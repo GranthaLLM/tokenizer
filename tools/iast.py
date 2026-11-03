@@ -19,58 +19,68 @@ _con_keys = sorted(CON, key=len, reverse=True)
 _vow_keys = sorted(VOW, key=len, reverse=True)
 
 
-def to_devanagari(s):
+def convert_map(s):
     s = unicodedata.normalize("NFC", s).lower()
-    out, i, n = [], 0, len(s)
+    out, starts, pos, i, n = [], [0] * len(s), 0, 0, len(s)
     prev_con = False
+
+    def emit(x):
+        nonlocal pos
+        out.append(x)
+        pos += len(x)
+
     while i < n:
         c = s[i]
         if c in "|/":
             j = i
             while j < n and s[j] in "|/":
                 j += 1
-            out.append("॥" if j - i >= 2 else "।")
+            for k in range(i, j):
+                starts[k] = pos
+            emit("॥" if j - i >= 2 else "।")
             prev_con = False
             i = j
             continue
         if c == "-":
+            starts[i] = pos
             i += 1
             continue
-        hit = None
-        for k in _con_keys:
-            if s.startswith(k, i):
-                hit = k
-                break
+        hit = next((k for k in _con_keys if s.startswith(k, i)), None)
         if hit:
+            for k in range(i, i + len(hit)):
+                starts[k] = pos
             if prev_con:
-                out.append(VIRAMA)
-            out.append(CON[hit])
+                emit(VIRAMA)
+            emit(CON[hit])
             prev_con = True
             i += len(hit)
             continue
-        vh = None
-        for k in _vow_keys:
-            if s.startswith(k, i):
-                vh = k
-                break
+        vh = next((k for k in _vow_keys if s.startswith(k, i)), None)
         if vh:
-            out.append(MAT[vh] if prev_con else VOW[vh])
+            for k in range(i, i + len(vh)):
+                starts[k] = pos
+            emit(MAT[vh] if prev_con else VOW[vh])
             prev_con = False
             i += len(vh)
             continue
+        starts[i] = pos
         if prev_con:
-            out.append(VIRAMA)
+            emit(VIRAMA)
             prev_con = False
         if c in MISC:
-            out.append(MISC[c])
+            emit(MISC[c])
         elif c in DIG:
-            out.append(DIG[c])
+            emit(DIG[c])
         else:
-            out.append(c)
+            emit(c)
         i += 1
     if prev_con:
-        out.append(VIRAMA)
-    return "".join(out)
+        emit(VIRAMA)
+    return "".join(out), starts, s
+
+
+def to_devanagari(s):
+    return convert_map(s)[0]
 
 
 def iast_ratio(s):
