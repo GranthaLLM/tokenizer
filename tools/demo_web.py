@@ -58,8 +58,23 @@ class HF:
         return out
 
 
+class GranthaSplit:
+    name = "Grantha + ByT5 splitter"
+    ours = True
+
+    def __init__(self):
+        from byt5_tagger import ByT5Tagger
+        from tagged import TaggedTok
+
+        self.tk = TaggedTok("data/tok_v8_tagak_128.model", ByT5Tagger(), "data/v8_tagak_128_map.json")
+
+    def spans(self, s):
+        return [(p.replace("▁", "") or "·", p.startswith("▁")) for p in self.tk.pieces(s)]
+
+
 MODELS = [
     Grantha(),
+    GranthaSplit(),
     HF("Gemma 3 / 4", "google/gemma-4-12B-it"),
     HF("Param2", "bharatgenai/Param2-17B-A2.4B-Thinking"),
     HF("Qwen3.5", "Qwen/Qwen3.5-9B"),
@@ -150,7 +165,7 @@ function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.cl
 function render(data) {
   OUT.textContent = "";
   var ms = data.models, ours = ms[0], best = null;
-  ms.slice(1).forEach(function (m) { if (!best || m.count < best.count) best = m; });
+  ms.filter(function (m) { return !m.ours; }).forEach(function (m) { if (!best || m.count < best.count) best = m; });
   var v = el("div", "verdict");
   if (ours.count > 0 && best) {
     var r = best.count / ours.count;
