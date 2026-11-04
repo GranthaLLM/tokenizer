@@ -48,27 +48,27 @@ git add results/proxy_*.json && git commit -m "results: proxy model bits per byt
 
 If the push fails because of credentials, just show the table and tell the user.
 
-## 2. Teacher labeling (long job, run after step 1, can run overnight)
+## 2. Sandhi-resolution labeling (long job, run after step 1, can run overnight)
 
-This labels about 2.9M Sanskrit words with the ByT5-Sanskrit segmenter. It downloads a 2.3 GB model from Hugging Face on first run. The script is resumable.
+This labels about 2.8M Sanskrit words (the most frequent corpus words, 73% of corpus word occurrences) with the ByT5-Sanskrit segmenter. The labels are the sandhi-resolved words that the new tokenizer trains on. It downloads a 2.3 GB model from Hugging Face on first run. The script is resumable.
 
 ```bash
-gunzip -k data/gpu_words.txt.gz
+gunzip -k data/resolve_words.txt.gz
 tmux new -s teacher      # or screen, or nohup
-python tools/teacher_gpu.py data/gpu_words.txt data/teacher_gpu.pkl
+python tools/teacher_gpu.py data/resolve_words.txt data/resolve_labels.pkl --chunk 20000 --max-bytes 200000
 ```
 
-After the first chunk prints a words per second line, report that number to the user. Expect hundreds of words per second or better on this GPU. If it is under 100, try `--max-bytes 80000`.
+After the first chunk prints a words per second line, report that number to the user. Expect hundreds of words per second or better on this GPU. If you hit out-of-memory, lower `--max-bytes` (default 40000). If it is under 100 words per second, raise it.
 
-When it finishes, tell the user the output is `data/teacher_gpu.pkl` (do not commit it, it is large) and that it should be copied back to the Mac:
+When it finishes, tell the user the output is `data/resolve_labels.pkl` (do not commit it, it is large) and that it should be copied back to the Mac:
 
 ```bash
-rsync -av <pc>:<repo path>/data/teacher_gpu.pkl data/
+rsync -av <pc>:<repo path>/data/resolve_labels.pkl data/
 ```
 
 ## What to report
 
 1. GPU name and whether the three proxy runs finished.
 2. The bits per byte table.
-3. The teacher labeling speed and whether it finished.
+3. The labeling speed and whether it finished.
 4. Anything you had to change to make the scripts run.
