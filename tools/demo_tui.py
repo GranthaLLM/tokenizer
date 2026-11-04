@@ -79,7 +79,7 @@ def render(text):
         con.print()
         con.print()
     ours = len(results[0][1])
-    best = min(results[1:], key=lambda r: len(r[1]))
+    best = min((r for r in results if not r[0].ours), key=lambda r: len(r[1]))
     if ours:
         ratio = len(best[1]) / ours
         tail = f"{ratio:.1f} times more" if ratio >= 1 else "fewer, so Grantha loses here"
