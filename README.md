@@ -118,6 +118,14 @@ Cleaning: Unicode NFC, invisible characters stripped, a Devanagari-share filter,
 
 Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-NC-SA 4.0. This does not matter for internal benchmarking. It does for any public release of the +GRETIL variant.
 
+## Credits
+
+- [ByT5-Sanskrit](https://arxiv.org/abs/2409.13920) (Nehrdich, Hellwig and Keutzer, EMNLP Findings 2024), model `chronbmm/sanskrit5-multitask`. It labels compound boundaries for the tagger, and the demo can call it live. The paper states Apache 2.0.
+- [Digital Corpus of Sanskrit](https://github.com/OliverHellwig/sanskrit) (Oliver Hellwig), CC BY 4.0. Gold word splits for the tagger and the held-out compound test.
+- [Sanskrit corpus of the University of Hyderabad](http://sanskrit.uohyd.ac.in/Corpus/), Department of Sanskrit Studies. Source of Nyaya and philosophy words that were labeled by ByT5-Sanskrit.
+- [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), which collects [Sangraha](https://huggingface.co/datasets/ai4bharat/sangraha) (AI4Bharat), IndicCorp and others. [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror). [Setutila Sarvamula](https://github.com/Setutila/Sarvamula) texts (CC0).
+- [FLORES-200](https://github.com/facebookresearch/flores) (Meta) and [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (Bhardwaj et al., LREC 2018) for evaluation.
+
 ## Limits
 
 - Fertility is a cost measure. No model has been trained with this tokenizer yet, so there is no quality result.
