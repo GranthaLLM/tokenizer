@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import json
 import math
 import time
@@ -53,6 +54,10 @@ def batches(arr, ctx, bs, rng):
         yield torch.from_numpy(np.stack([arr[j : j + ctx + 1].astype(np.int64) for j in s]))
 
 
+def amp(dev):
+    return torch.autocast("cuda", dtype=torch.bfloat16) if dev == "cuda" else contextlib.nullcontext()
+
+
 @torch.no_grad()
 def eval_bits(model, arr, ctx, dev):
     model.eval()
@@ -60,7 +65,7 @@ def eval_bits(model, arr, ctx, dev):
     n = (len(arr) - 1) // ctx
     for i in range(0, n, 32):
         x = torch.from_numpy(np.stack([arr[j * ctx : j * ctx + ctx + 1].astype(np.int64) for j in range(i, min(i + 32, n))])).to(dev)
-        with torch.autocast("cuda", dtype=torch.bfloat16):
+        with amp(dev):
             logits = model(x[:, :-1])
         tot += F.cross_entropy(logits.float().reshape(-1, logits.shape[-1]), x[:, 1:].reshape(-1), reduction="sum").item()
         cnt += x[:, 1:].numel()
@@ -80,18 +85,22 @@ def main():
     ap.add_argument("--bs", type=int, default=64)
     ap.add_argument("--epochs", type=float, default=2)
     ap.add_argument("--lr", type=float, default=6e-4)
+    ap.add_argument("--max-lines", type=int, default=0, help="train on the first N lines (cut at the Nth end-of-text id)")
     a = ap.parse_args()
     torch.manual_seed(0)
     rng = np.random.default_rng(0)
-    dev = "cuda"
+    dev = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     D = Path(a.data)
     train = np.load(D / f"{a.name}_train.npy", mmap_mode="r")
     meta = json.load(open(D / "meta.json"))
+    if a.max_lines:
+        ends = np.flatnonzero(np.asarray(train) == 2)
+        train = np.asarray(train[: ends[a.max_lines - 1] + 1])
     model = GPT(a.vocab, a.d, a.layers, a.heads, a.ctx).to(dev)
     print(f"{a.name}: {sum(p.numel() for p in model.parameters())/1e6:.0f}M params, {len(train)/1e6:.1f}M train tokens", flush=True)
     steps_per_epoch = ((len(train) - 1) // a.ctx) // a.bs
     total = int(steps_per_epoch * a.epochs)
-    opt = torch.optim.AdamW(model.parameters(), lr=a.lr, betas=(0.9, 0.95), weight_decay=0.1, fused=True)
+    opt = torch.optim.AdamW(model.parameters(), lr=a.lr, betas=(0.9, 0.95), weight_decay=0.1, fused=(dev == "cuda"))
     step, t0, log = 0, time.time(), []
     while step < total:
         for batch in batches(train, a.ctx, a.bs, rng):
@@ -99,7 +108,7 @@ def main():
             for g in opt.param_groups:
                 g["lr"] = lr
             x = batch.to(dev)
-            with torch.autocast("cuda", dtype=torch.bfloat16):
+            with amp(dev):
                 loss = F.cross_entropy(model(x[:, :-1]).float().reshape(-1, a.vocab), x[:, 1:].reshape(-1))
             opt.zero_grad(set_to_none=True)
             loss.backward()
