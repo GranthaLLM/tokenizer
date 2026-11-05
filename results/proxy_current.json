@@ -1,0 +1,28 @@
+{
+ "name": "current",
+ "params_m": 90.981376,
+ "train_tokens": 43760947,
+ "steps": 10682,
+ "bits_per_byte": {
+  "dcs": {
+   "bpb": 0.9847141992575928,
+   "val_tokens": 77644,
+   "bytes": 898351
+  },
+  "gretil": {
+   "bpb": 0.9634958717629264,
+   "val_tokens": 149277,
+   "bytes": 1733395
+  },
+  "corpus": {
+   "bpb": 0.8841591235892173,
+   "val_tokens": 258524,
+   "bytes": 3055646
+  },
+  "english": {
+   "bpb": 1.728370224794567,
+   "val_tokens": 26595,
+   "bytes": 132096
+  }
+ }
+}
