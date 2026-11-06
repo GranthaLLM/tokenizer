@@ -9,7 +9,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from akshara import bounds
+import os
+
 from align import junctions, pick
+
+BOTH = os.environ.get("BOTH") == "1"
 
 ROOT = Path("data/raw/uoh")
 DEVW = re.compile("[ऀ-ॣॱ-ॿ]")
@@ -46,9 +50,11 @@ def gold(surf, comps):
     bset = set(bs)
     found = {}
     for pos, changed in junctions(surf, comps):
-        t, alts = pick(pos, bs, bset, set(found), changed, len(surf))
+        t, alts, extra = pick(pos, bs, bset, set(found), changed, len(surf))
         if 0 < t < len(surf):
             found.setdefault(t, set()).update(alts)
+            if BOTH and extra is not None and 0 < extra < len(surf):
+                found.setdefault(extra, set()).update(alts)
     targets = sorted(found)
     return targets, [sorted(found[t]) for t in targets]
 

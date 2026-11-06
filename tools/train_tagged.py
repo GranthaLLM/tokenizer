@@ -43,10 +43,10 @@ san = classical + take(["data/pool/san_g.txt"], max(SAN - cchars, 0))
 import os
 
 TG = os.environ.get("TAGGER", "1")
-tg = Tagger() if TG == "1" else Tagger(f"data/tagger{TG[0]}.pt", f"data/tagger{TG[0]}_vocab.json", hid=192)
+tg = Tagger() if TG == "1" else Tagger(f"data/tagger{TG[0]}.pt", f"data/tagger{TG[0]}_vocab.json", hid=(256 if TG[0] == "6" else 192))
 if TG.endswith("h"):
     tg.override = {w: list(c) for w, c in pickle.load(open("data/teacher_cuts.pkl", "rb")).items()}
-cache = Path("data/pool_cuts.pkl" if TG == "1" else f"data/pool_cuts{TG}.pkl")
+cache = Path("data/pool_cuts.pkl" if TG == "1" else f"data/pool_cuts{os.environ.get('CACHE', TG)}.pkl")
 if cache.exists():
     tg.cache = pickle.load(open(cache, "rb"))
 else:
