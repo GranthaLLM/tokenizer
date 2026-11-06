@@ -128,5 +128,5 @@ text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12.
 <text x="720.3" y="445" class="mut">5.43</text>
 <text x="20" y="520" class="mut">Grantha is trained on Sanskrit and English only. The others are general multilingual tokenizers.</text>
 <text x="20" y="536" class="mut">On DCS and GRETIL, Grantha also trained on other works from those collections.</text>
-<text x="20" y="552" class="mut">Fewer tokens is cheaper to process, not necessarily better quality. No model has been trained on it yet.</text>
+<text x="20" y="552" class="mut">Fewer tokens is cheaper to process, not necessarily better quality. No full-scale model has been trained on it yet.</text>
 </svg>

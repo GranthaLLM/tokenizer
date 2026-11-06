@@ -80,7 +80,7 @@ for pi, (title, vals) in enumerate(PANELS):
 notes = [
     "Grantha is trained on Sanskrit and English only. The others are general multilingual tokenizers.",
     "On DCS and GRETIL, Grantha also trained on other works from those collections.",
-    "Fewer tokens is cheaper to process, not necessarily better quality. No model has been trained on it yet.",
+    "Fewer tokens is cheaper to process, not necessarily better quality. No full-scale model has been trained on it yet.",
 ]
 for i, n in enumerate(notes):
     out.append(f'<text x="20" y="{H-48+i*16}" class="mut">{n}</text>')
