@@ -50,7 +50,7 @@ def main():
         pw = [a / b for a, b in perwork.values() if b >= 500]
         rows.append(f"| {n} | {res['dcs']:.2f} | {res['gretil']:.2f} | {max(pw):.2f} | {min(pw):.2f} |")
         print(rows[-1], flush=True)
-    Path("results/classical_eval.md").write_text("\n".join(rows) + "\n")
+    Path("results/classical_eval.md" if len(names) > 8 else "results/classical_eval_partial.md").write_text("\n".join(rows) + "\n")
 
 
 if __name__ == "__main__":

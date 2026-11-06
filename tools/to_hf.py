@@ -1,4 +1,5 @@
 import sys
+import unicodedata
 from pathlib import Path
 
 import sentencepiece as spm
@@ -17,7 +18,7 @@ unk = proto.pieces[proto.trainer_spec.unk_id].piece
 special = [p.piece for p in proto.pieces if p.type in (2, 3, 4)]
 user = [p.piece for p in proto.pieces if p.type == 4]
 tok = Tokenizer(BPE(vocab, merges, unk_token=unk, fuse_unk=True, byte_fallback=True, dropout=None))
-tok.normalizer = normalizers.Sequence([normalizers.Prepend("▁"), normalizers.Replace(" ", "▁")])
+tok.normalizer = normalizers.Sequence([normalizers.NFC(), normalizers.Prepend("▁"), normalizers.Replace(" ", "▁")])
 tok.pre_tokenizer = None
 tok.decoder = decoders.Sequence([decoders.Replace("▁", " "), decoders.ByteFallback(), decoders.Fuse(), decoders.Strip(content=" ", left=1, right=0)])
 bos, eos = proto.pieces[proto.trainer_spec.bos_id].piece, proto.pieces[proto.trainer_spec.eos_id].piece
@@ -29,6 +30,11 @@ kw = dict(tokenizer_object=tok, unk_token=unk, bos_token=bos, eos_token=eos)
 if pad:
     kw["pad_token"] = pad
 hf = PreTrainedTokenizerFast(**kw)
+if "<|im_start|>" in user:
+    hf.chat_template = (
+        "{% for m in messages %}<|im_start|>{{ m['role'] }}\n{{ m['content'] }}<|im_end|>\n{% endfor %}"
+        "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}"
+    )
 Path(out).mkdir(parents=True, exist_ok=True)
 hf.save_pretrained(out)
 sp = spm.SentencePieceProcessor(model_file=model)
@@ -38,12 +44,18 @@ first = None
 for l in ("san_Deva", "eng_Latn", "hin_Deva"):
     for s in Path(F + l + ".devtest").read_text(encoding="utf-8").splitlines():
         tot += 1
-        a, b = sp.encode(s), hf.encode(s, add_special_tokens=False)
+        n = unicodedata.normalize("NFC", s)
+        a, b = sp.encode(n), hf.encode(s, add_special_tokens=False)
         if a != b:
             bad += 1
             first = first or (s[:50], a[:10], b[:10])
-        if hf.decode(b) == sp.decode(a):
+        if hf.decode(b) == n:
             rt += 1
-print("vocab", len(hf), "| ids equal to SentencePiece:", tot - bad, "of", tot, "| decode equal:", rt, "of", tot)
+print("vocab", len(hf), "| ids equal to SentencePiece:", tot - bad, "of", tot, "| decode equals NFC input:", rt, "of", tot)
 if first:
     print("first mismatch:", first)
+if hf.chat_template:
+    ids = hf.apply_chat_template([{"role": "user", "content": "अनुवादय"}], add_generation_prompt=True, tokenize=True)
+    ids = ids["input_ids"] if isinstance(ids, dict) or hasattr(ids, "keys") else ids
+    print("chat template ok:", repr(hf.decode(ids)))
+print("special tokens:", len(hf.all_special_tokens), "pad id", hf.pad_token_id, "eos id", hf.eos_token_id)
