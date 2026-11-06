@@ -102,6 +102,9 @@ MODELS = [
 
 
 def tokenize(text):
+    from common import normalize
+
+    text = "\n".join(normalize(x) for x in text.split("\n"))
     words = max(len(text.split()), 1)
     res = []
     for m in MODELS:
@@ -173,6 +176,7 @@ textarea:focus-visible, button:focus-visible { outline:2px solid var(--accent); 
   <label class="eyebrow" for="t">Paste Sanskrit or English</label>
   <textarea id="t" lang="sa" spellcheck="false" placeholder="कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"></textarea>
   <div class="samples" id="samples" role="group" aria-label="Sample texts"></div>
+  <div class="hint" id="chk"></div>
   <div class="hint">Samples are drawn from the local corpus and not uploaded anywhere.</div>
 </section>
 <section class="stack" id="out" aria-live="polite"></section>
@@ -211,7 +215,16 @@ function render(data) {
   });
   OUT.appendChild(rows);
 }
+function check(raw) {
+  var cps = Array.from(raw), bad = [];
+  var inv = raw.match(/[\u200b-\u200d\u2060\ufeff\u00ad\u00a0]/g) || [];
+  if (inv.length) bad.push(inv.length + " invisible or non-breaking character(s) will be removed");
+  if (raw.normalize("NFC") !== raw) bad.push("not in NFC form, will be normalised");
+  var sp = (raw.match(/ /g) || []).length;
+  document.getElementById("chk").textContent = cps.length + " characters, " + sp + " space(s), " + raw.trim().split(/\s+/).filter(Boolean).length + " word(s)" + (bad.length ? ". " + bad.join(". ") : ". Clean.");
+}
 function run() {
+  check(T.value);
   var text = T.value.trim(), my = ++seq;
   if (!text) { OUT.textContent = ""; return; }
   fetch("/api/tokenize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: text }) })
