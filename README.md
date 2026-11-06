@@ -92,9 +92,24 @@ Grantha keeps words such as `नारायणं`, `निखिल`, `पू�
 <details>
 <summary><b>Compound boundaries</b></summary>
 
-Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On 238,889 compounds from 18 held-out DCS works, 76.5% of true boundaries are also token boundaries, with boundary F1 of 0.66. Gemma 3 / 4 respects 90.0% (F1 0.45) but needs about 1.5 times the tokens because it cuts everything into small pieces. Param2 respects 62.5% (F1 0.31).
+Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On the 258,707 benchmark compounds below, 73.0% of true boundaries are also token boundaries (F1 0.68, 2.73 tokens per word). Gemma 3 / 4 respects 88.9% (F1 0.50) but needs 5.20 tokens per word, because it cuts everything into small pieces. Param2 respects 58.0% (F1 0.34).
 
-An experimental boundary tagger, kept in `tools/`, raises this to 97.2% respected and F1 0.86 at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
+An experimental boundary tagger, kept in `tools/`, raises this to 97.2% respected and F1 0.86 on a 30,000-word sample, at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
+
+</details>
+
+<details>
+<summary><b>Resolved-word tokenizer (experimental)</b></summary>
+
+A second design tokenizes the sandhi-resolved words (`स्थिति`, `अप्यय`) and rebuilds the original text with learned join rules (`tools/sandhi.py`, `tools/resolved.py`). Resolution is only accepted when the join reproduces the original word exactly, so the round trip is lossless by construction. With a dictionary of 3M ByT5-Sanskrit labels and no live model:
+
+| set | tokens per word, plain | tokens per word, resolved | word occurrences resolved | exact round trip |
+|---|---|---|---|---|
+| FLORES Sanskrit | 1.90 | 1.96 | 6.1% | 94.7% |
+| DCS held-out | 1.69 | 1.86 | 11.9% | 100.0% |
+| GRETIL held-out | 2.06 | 2.27 | 14.8% | 99.8% |
+
+The few inexact round trips differ only in whitespace. The resolved design costs 3 to 10% more tokens and only covers compounds found in the dictionary, since resolving an unseen word needs a model. It is not part of the release.
 
 </details>
 
@@ -113,6 +128,32 @@ An experimental boundary tagger, kept in `tools/`, raises this to 97.2% respecte
 Adding DCS and GRETIL lowers classical fertility by 4 to 6% at no cost elsewhere. The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Isolating the danda costs 2 to 5% more Sanskrit tokens. Leaving digits unsplit saves 2% of Sanskrit and 3% of English tokens on FLORES, but multi-digit tokens are known to hurt numeric reasoning, so the release splits digits.
 
 </details>
+
+## Benchmark
+
+The held-out material doubles as a benchmark for Sanskrit tokenizers.
+
+| file | contents |
+|---|---|
+| `benchmark/compounds_test.jsonl.gz` | 258,707 compounds from 18 held-out DCS works. Each item has the word and its boundaries, each boundary a list of acceptable cut positions (sandhi can fuse a vowel into the letter before the cut) |
+| `benchmark/unsplit_controls.txt.gz` | 104,863 words DCS does not split |
+| `benchmark/heldout_text.parquet`, `heldout_works.json` | Text of the 56 held-out works (18 DCS, 38 GRETIL) and their names |
+| `benchmark/vedanta_to_label.csv` | 300 Madhva-style long words with a model-guessed split, waiting for human correction |
+
+```bash
+python tools/score_compounds.py sp:release/grantha-128k.model
+python tools/score_compounds.py hf:google/gemma-4-12B-it
+```
+
+| tokenizer | precision | recall | F1 | tokens per word |
+|---|---|---|---|---|
+| Grantha 128k | 0.637 | 0.730 | 0.680 | 2.73 |
+| Gemma 3 / 4 | 0.350 | 0.889 | 0.503 | 5.20 |
+| Sarvam-1 | 0.341 | 0.886 | 0.492 | 5.34 |
+| Mistral Large 4 | 0.230 | 0.656 | 0.340 | 5.64 |
+| Param2 | 0.235 | 0.580 | 0.335 | 4.99 |
+
+Recall is the share of true boundaries that are also token boundaries, so a tokenizer can raise it by cutting more. Read it with tokens per word. The gold boundaries come from DCS annotation, which is stronger on epic and Purana text than on philosophical prose. The Vedanta set is not yet human-checked.
 
 ## Training data
 
