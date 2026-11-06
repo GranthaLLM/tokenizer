@@ -58,6 +58,25 @@ class HF:
         return out
 
 
+class GranthaTag:
+    name = "Grantha + boundary tagger"
+    ours = True
+
+    def __init__(self):
+        import pickle
+
+        from tagged import TaggedTok
+        from tagger import Tagger
+
+        ver = "v10" if os.path.exists("data/tok_v10_tagak_128.model") else "v8"
+        tg = Tagger("data/tagger6.pt", "data/tagger6_vocab.json", hid=256)
+        tg.override = {w: list(c) for w, c in pickle.load(open("data/teacher_cuts.pkl", "rb")).items()}
+        self.tk = TaggedTok(f"data/tok_{ver}_tagak_128.model", tg, f"data/{ver}_tagak_128_map.json")
+
+    def spans(self, s):
+        return [(p.replace("▁", "") or "·", p.startswith("▁")) for p in self.tk.pieces(s)]
+
+
 class GranthaSplit:
     name = "Grantha + ByT5 splitter"
     ours = True
@@ -74,7 +93,8 @@ class GranthaSplit:
 
 MODELS = [
     Grantha(),
-    GranthaSplit(),
+    GranthaTag(),
+] + ([GranthaSplit()] if os.environ.get("DEMO_BYT5") else []) + [
     HF("Gemma 3 / 4", "google/gemma-4-12B-it"),
     HF("Param2", "bharatgenai/Param2-17B-A2.4B-Thinking"),
     HF("Qwen3.5", "Qwen/Qwen3.5-9B"),
