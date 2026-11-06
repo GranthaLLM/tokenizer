@@ -93,16 +93,26 @@ Sanskrit compounds and sandhi hide where words end, and plain BPE cuts at freque
 | tokenizer | cuts that are right | true boundaries respected | F1 | tokens per word, FLORES / DCS / GRETIL |
 |---|---|---|---|---|
 | Grantha 128k | 0.585 | 76.5% | 0.663 | 1.89 / 1.68 / 2.05 |
-| Grantha 128k + boundary tagger | 0.707 | 99.1% | 0.825 | 1.93 / 1.75 / 2.23 |
+| Grantha 128k + boundary tagger | 0.768 | 97.2% | 0.858 | 1.94 / 1.78 / 2.29 |
 | Gemma 3 / 4 | 0.295 | 90.0% | 0.445 | 2.83 / 3.22 / 3.82 |
 | Param2 | 0.204 | 62.5% | 0.308 | 2.32 / 3.00 / 3.78 |
 
-The boundary tagger variant puts an invisible mark at compound and sandhi joints before tokenization, and BPE is trained so no piece crosses a mark. The marks are dropped from the output, so decoding returns the original text. The tagger is a small character model trained on DCS gold splits and on labels from [ByT5-Sanskrit](https://aclanthology.org/2024.findings-emnlp.805.pdf) for 263k Vedanta-style, Bhagavata and pool words. The tokenizer then also needs the tagger at use time.
+The boundary tagger variant puts an invisible mark at compound and sandhi joints before tokenization, and BPE is trained so no piece crosses a mark. The marks are dropped from the output, so decoding returns the original text. The tagger is a small character model trained on DCS gold splits and on labels from [ByT5-Sanskrit](https://aclanthology.org/2024.findings-emnlp.805.pdf) for 3M Vedanta-style, Bhagavata and frequent pool words. A dictionary of those 3M words overrides the tagger for known words. ByT5-Sanskrit itself is only used offline to make the labels, it is not needed at run time.
+
+Small language model test: the same 91M-parameter GPT was trained on the same text with three tokenizers (plain, vowel signs kept with their letters, boundary-tagged), 2 epochs, one seed. Bits per byte on held-out text:
+
+| tokenizer | DCS | GRETIL | corpus works | English |
+|---|---|---|---|---|
+| Grantha 128k | 0.985 | 0.964 | 0.884 | 1.728 |
+| vowel signs kept | 0.990 | 0.965 | 0.885 | 1.720 |
+| boundary-tagged (earlier tagger) | 0.991 | 0.969 | 0.882 | 1.722 |
+
+They tie within 0.6%, which is inside the noise of a single seed. Correct splitting costs no model quality at this scale. This test does not show that it improves it. Results: `results/proxy_*.json`.
 
 Known gaps:
 
-- A piece can still hold a fused akshara together with its neighbour: `ईहा नियति` comes out as `हानि | यति`, because the vowel fuses into `हा`.
-- The tagger is a student of ByT5-Sanskrit and misses some very long compounds. ByT5-Sanskrit itself splits them correctly but runs at about 35 to 90 words per second on a laptop.
+- A piece can still hold a fused akshara together with its neighbour, so some `ईहा नियति` style joints come out glued.
+- The tagger still misses some compounds in Madhva-style text, for example `आधिकारिकाधिकरणम्`. ByT5-Sanskrit splits these correctly but is a 2.3 GB model.
 - DCS is mostly epic and Purana text, and the labels outside it come from ByT5, not from people. There is no human-checked Vedanta compound test yet.
 - UoH sandhi splits mark only sandhi joints, not whole compounds, so they were not used as gold for compounds.
 
