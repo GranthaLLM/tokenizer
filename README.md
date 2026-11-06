@@ -2,7 +2,7 @@
 
 A joint Sanskrit (Devanagari) and English SentencePiece BPE tokenizer for GranthaLLM, 128k vocabulary. Its training text excludes everything in [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus) and every work used as a test set below, so the corpus stays a clean evaluation set.
 
-Status: final v0. The model is `release/grantha-128k.model` (with `grantha-128k.vocab`).
+Status: final v0. The model is `release/grantha-128k.model` (with `grantha-128k.vocab`), and `release/hf/` holds the same tokenizer in Hugging Face format.
 
 ## Use
 
@@ -14,7 +14,18 @@ ids = sp.encode("कर्मण्येवाधिकारस्ते म�
 text = sp.decode(ids)
 ```
 
-Byte fallback is on, so any text encodes. SentencePiece collapses runs of spaces and drops trailing spaces: on FLORES Sanskrit, English and Hindi, 2,882 of 3,036 lines decode back exactly, and every difference is whitespace.
+or with Hugging Face `transformers`:
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("release/hf")
+tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], add_generation_prompt=True)
+```
+
+- **Lossless.** Byte fallback is on and whitespace is kept as written, so `decode(encode(x)) == x` for NFC text. The Hugging Face tokenizer gives identical ids to SentencePiece on all 3,036 FLORES Sanskrit, English and Hindi lines.
+- **Input should be NFC.** The model was trained on NFC text. The Hugging Face tokenizer applies NFC first, the raw SentencePiece model does not.
+- **Special tokens.** `<unk>` 0, `<s>` 1, `</s>` 2 (end of text), `<pad>` 3, then `<|im_start|>` 4, `<|im_end|>` 5 and 14 reserved slots `<|reserved_0|>` to `<|reserved_13|>` (6 to 19). The Hugging Face tokenizer ships a ChatML chat template.
 
 ## Results
 
@@ -24,7 +35,7 @@ Tokens per word, lower is better. This measures cost, not quality: fewer tokens 
 
 | tokenizer | FLORES Sanskrit | FLORES English | 41 corpus works | DCS held-out | GRETIL held-out |
 |---|---|---|---|---|---|
-| **Grantha 128k** | **1.89** | **1.17** | **1.98** | **1.68** | **2.05** |
+| **Grantha 128k** | **1.90** | **1.17** | **1.99** | **1.68** | **2.05** |
 | Param2 | 2.32 | 1.49 | 3.43 | 3.00 | 3.78 |
 | Gemma 3 / 4 | 2.83 | 1.24 | 3.53 | 3.22 | 3.82 |
 | Mistral Large 4 | 2.90 | 1.27 | 3.60 | 3.34 | 3.97 |
@@ -36,7 +47,7 @@ Tokens per word, lower is better. This measures cost, not quality: fewer tokens 
 - **41 corpus works:** the Sanskrit of `corpus/` (1.46M words), inference only.
 - **DCS and GRETIL held-out works:** 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. The text is converted from IAST to Devanagari.
 
-Sanskrit costs 1.25 times the tokens of its English translation, against 1.77 for Gemma. Full tables: [`results/fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`results/domain_check.md`](results/domain_check.md) (per corpus work), [`results/classical_eval.md`](results/classical_eval.md). Not measured: Kimi K3 (its tokenizer needs custom code), Tiny Aya and Apertus (gated). Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+Sanskrit costs 1.26 times the tokens of its English translation, against 1.77 for Gemma. Full tables: [`results/fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`results/domain_check.md`](results/domain_check.md) (per corpus work), [`results/classical_eval.md`](results/classical_eval.md). Not measured: Kimi K3 (its tokenizer needs custom code), Tiny Aya and Apertus (gated). Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
 
 ## Example
 
@@ -73,13 +84,14 @@ An experimental boundary tagger raises this to 97.2% respected and F1 0.86, at 3
 
 | training data | vocab | FLORES Sanskrit | FLORES English | DCS | GRETIL |
 |---|---|---|---|---|---|
-| web pool + DCS + GRETIL (release) | 128k | 1.89 | 1.17 | 1.68 | 2.05 |
+| web pool + DCS + GRETIL (release) | 128k | 1.90 | 1.17 | 1.68 | 2.05 |
+| same, digits not split | 128k | 1.86 | 1.13 | 1.68 | 2.06 |
 | web pool + DCS | 128k | 1.87 | 1.16 | 1.71 | 2.15 |
 | web pool only | 128k | 1.87 | 1.16 | 1.75 | 2.17 |
 | web pool + DCS + GRETIL | 64k | 2.06 | 1.24 | 1.89 | 2.27 |
 | web pool only | 64k | 2.05 | 1.23 | 1.97 | 2.38 |
 
-The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Making the danda a standalone piece costs 2 to 5% more Sanskrit tokens.
+The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Making the danda a standalone piece costs 2 to 5% more Sanskrit tokens. Leaving digits unsplit saves 2% of Sanskrit and 3% of English tokens on FLORES, but multi-digit tokens are known to hurt numeric reasoning, so the release splits digits.
 
 ## Training data
 
@@ -96,12 +108,11 @@ Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-
 ## Limits
 
 - Fertility is a cost measure. No full-scale model has been trained with this tokenizer, so there is no quality result beyond the small test above.
-- About 2% of training lines share a short phrase (a 20-character window) with `corpus/`. These are formulae, not passages.
+- No Sanskrit training line shares a run of 27 or more characters with `corpus/` or with a held-out work. Shorter shared phrases, such as common formulae, can still occur.
 - DCS and GRETIL text is transliterated by our own converter and keeps editorial conventions such as `प्य् उक्तं`, so some of it is split at sandhi in a way fused text is not.
 - Tokens per word is a weak unit for Sanskrit because sandhi fuses words, and it is noisy on GRETIL because some files are set without spaces.
 - Long compounds are cut at the wrong place in places (see Compound splitting).
-- Whitespace is normalised, and there is no `tokenizer.json` or special-token set yet.
-- Digit splitting, NFC-only normalisation and danda handling were chosen, not ablated.
+- Danda isolation and digit splitting were ablated (see Variants). NFC-only normalisation and the 50/50 Sanskrit and English mix were chosen, with the mix tested only at 64k.
 
 ## Credits
 

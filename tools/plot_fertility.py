@@ -2,7 +2,7 @@ from pathlib import Path
 
 R = Path("results")
 ORDER = [
-    ("Grantha 128k", "tok_v2_dcsgr_128", "dcsgr_128", True),
+    ("Grantha 128k", "tok_final_128", "final_128", True),
     ("Param2", "param2", "param2", False),
     ("Gemma 3 / 4", "gemma4", "gemma4", False),
     ("Mistral Large 4", "mistral-large-4", "mistral4", False),

@@ -15,3 +15,5 @@
 | command-a-plus | 4.02 | 4.80 |
 | qwen3.5 | 4.47 | 5.43 |
 | deepseek-v4.1 | 4.80 | 5.57 |
+| tok_final_128 | 1.68 | 2.05 |
+| tok_final_nodigits_128 | 1.68 | 2.06 |
