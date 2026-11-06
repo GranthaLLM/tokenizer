@@ -63,8 +63,8 @@ def eval_bits(model, arr, ctx, dev):
     model.eval()
     tot, cnt = 0.0, 0
     n = (len(arr) - 1) // ctx
-    for i in range(0, n, 32):
-        x = torch.from_numpy(np.stack([arr[j * ctx : j * ctx + ctx + 1].astype(np.int64) for j in range(i, min(i + 32, n))])).to(dev)
+    for i in range(0, n, 8):
+        x = torch.from_numpy(np.stack([arr[j * ctx : j * ctx + ctx + 1].astype(np.int64) for j in range(i, min(i + 8, n))])).to(dev)
         with amp(dev):
             logits = model(x[:, :-1])
         tot += F.cross_entropy(logits.float().reshape(-1, logits.shape[-1]), x[:, 1:].reshape(-1), reduction="sum").item()

@@ -1,0 +1,28 @@
+{
+ "name": "akshara",
+ "params_m": 90.981376,
+ "train_tokens": 43748112,
+ "steps": 10680,
+ "bits_per_byte": {
+  "dcs": {
+   "bpb": 0.9899301572090818,
+   "val_tokens": 78115,
+   "bytes": 898351
+  },
+  "gretil": {
+   "bpb": 0.965365712065935,
+   "val_tokens": 149962,
+   "bytes": 1733395
+  },
+  "corpus": {
+   "bpb": 0.8849785489772828,
+   "val_tokens": 258935,
+   "bytes": 3055646
+  },
+  "english": {
+   "bpb": 1.7198199443455617,
+   "val_tokens": 26778,
+   "bytes": 132096
+  }
+ }
+}
