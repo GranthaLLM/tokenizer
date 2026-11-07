@@ -138,7 +138,8 @@ The held-out material doubles as a benchmark for Sanskrit tokenizers.
 | `benchmark/compounds_test.jsonl.gz` | 258,707 compounds from 18 held-out DCS works. Each item has the word and its boundaries, each boundary a list of acceptable cut positions (sandhi can fuse a vowel into the letter before the cut) |
 | `benchmark/unsplit_controls.txt.gz` | 104,863 words DCS does not split |
 | `benchmark/heldout_text.parquet`, `heldout_works.json` | Text of the 56 held-out works (18 DCS, 38 GRETIL) and their names |
-| `benchmark/vedanta_to_label.csv` | 300 Madhva-style long words with a model-guessed split, waiting for human correction |
+| `benchmark/compounds_samasa_uoh.jsonl.gz` | 7,429 compounds from the University of Hyderabad samaasa-tagged corpus, split by human annotators. The written word is rebuilt from the tagged components and kept only if it occurs in our corpus |
+| `benchmark/compounds_vedanta.jsonl.gz` | 270 long Madhva-style Vedanta words (733 boundaries), split by hand into real words. Vedic mantras with accent marks are left out |
 
 ```bash
 python tools/score_compounds.py sp:release/grantha-128k.model
