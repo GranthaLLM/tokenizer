@@ -1,7 +1,7 @@
 """Bits per byte of open models on held-out Sanskrit, a tokenizer-independent measure of what a model already knows.
 
 usage: python tools/model_bpb.py Qwen/Qwen3-8B-Base [--per-work 4] [--chars 1000]
-Writes results/model_bpb/<model>.json. The text is benchmark/heldout_text.parquet: DCS and GRETIL works
+Writes results/model_bpb/<model>.json. The text is benchmark/heldout_text.parquet: DCS works (GRETIL text is not in the repo; rebuild it to include it)
 that no Grantha component trained on. Models may have seen these works in pretraining.
 """
 import argparse

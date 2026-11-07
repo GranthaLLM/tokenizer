@@ -4,6 +4,7 @@ import pickle
 import shutil
 from pathlib import Path
 
+import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 OUT = Path("benchmark")
@@ -15,7 +16,7 @@ with gzip.open(OUT / "compounds_test.jsonl.gz", "wt", encoding="utf-8") as f:
 with gzip.open(OUT / "unsplit_controls.txt.gz", "wt", encoding="utf-8") as f:
     f.write("\n".join(unsplit) + "\n")
 t = pq.read_table("data/pool/classical_test.parquet")
-pq.write_table(t, OUT / "heldout_text.parquet", compression="zstd")
+pq.write_table(t.filter(pc.equal(t["source"], "dcs")), OUT / "heldout_text.parquet", compression="zstd")
 works = sorted(set(zip(t["source"].to_pylist(), t["work"].to_pylist())))
 json.dump([{"source": s, "work": w} for s, w in works], open(OUT / "heldout_works.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 shutil.copy("data/vedanta_to_label.csv", OUT / "vedanta_to_label.csv")

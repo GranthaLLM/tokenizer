@@ -152,7 +152,7 @@ The held-out material doubles as a benchmark for Sanskrit tokenizers.
 |---|---|
 | `benchmark/compounds_test.jsonl.gz` | 258,707 compounds from 18 held-out DCS works. Each item has the word and its boundaries, each boundary a list of acceptable cut positions (sandhi can fuse a vowel into the letter before the cut) |
 | `benchmark/unsplit_controls.txt.gz` | 104,863 words DCS does not split |
-| `benchmark/heldout_text.parquet`, `heldout_works.json` | Text of the 56 held-out works (18 DCS, 38 GRETIL) and their names |
+| `benchmark/heldout_text.parquet`, `heldout_works.json` | Text of the 18 held-out DCS works (CC BY 4.0), and the names of all 56 held-out works. GRETIL is CC BY-NC-SA, so its text is not redistributed here; rebuild it from the [GRETIL mirror](https://github.com/INDOLOGY/GRETIL-mirror) with `tools/build_classical.py` and `tools/split_classical.py` |
 | `benchmark/compounds_samasa_uoh.jsonl.gz` | 7,429 compounds from the University of Hyderabad samaasa-tagged corpus, split by human annotators. The written word is rebuilt from the tagged components and kept only if it occurs in our corpus |
 | `benchmark/compounds_vedanta.jsonl.gz` | 270 long Madhva-style Vedanta words (733 boundaries), split by hand into real words. Vedic mantras with accent marks are left out |
 
@@ -179,9 +179,16 @@ Recall is the share of true boundaries that are also token boundaries, so a toke
 | Sanskrit, classical | [DCS](https://github.com/OliverHellwig/sanskrit) (CC BY 4.0) and [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror) (CC BY-NC-SA 4.0), IAST converted to Devanagari | 253 DCS works (3.0M words), 738 GRETIL works (12.5M words) |
 | English | Wikipedia (20231101.en, shard 0) and FineWeb-Edu (sample/10BT, shard 0) | 400M characters |
 
+The tokenizer is trained with spaces removed from 25% of the Sanskrit lines, so a word has nearly the same pieces whether or not spaces surround it.
+
 ## Credits
 
 - [Digital Corpus of Sanskrit](https://github.com/OliverHellwig/sanskrit) (Oliver Hellwig): training text and the held-out test works.
 - [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), which collects [Sangraha](https://huggingface.co/datasets/ai4bharat/sangraha) (AI4Bharat), IndicCorp and others; [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror).
 - [FLORES-200](https://github.com/facebookresearch/flores) (Meta) and [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (Bhardwaj et al., LREC 2018): evaluation.
+- [Department of Sanskrit Studies, University of Hyderabad](https://sanskrit.uohyd.ac.in/Corpus/) (Amba Kulkarni and colleagues): the human-annotated sandhi and samaasa corpora behind two benchmark sets.
 - The experimental tagger uses labels from [ByT5-Sanskrit](https://arxiv.org/abs/2409.13920) (Nehrdich, Hellwig and Keutzer, EMNLP Findings 2024).
+
+## License
+
+Apache-2.0 for the code and the tokenizer files (see `LICENSE`). The DCS text in `benchmark/` is CC BY 4.0 (Oliver Hellwig); the UoH compound set is derived from the University of Hyderabad samaasa corpus.

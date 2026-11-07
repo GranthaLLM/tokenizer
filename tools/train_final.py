@@ -50,7 +50,7 @@ def unspaced(ln):
     return DEVA_GAP.sub("", ln) if random.random() < NOSPACE and sum("ऀ" <= c <= "ॿ" for c in ln) > len(ln) / 2 else ln
 
 
-mix = Path("data/mix_space.txt" if NOSPACE else "data/mix_final.txt")
+mix = Path(f"data/mix_space{round(NOSPACE * 100)}.txt" if NOSPACE else "data/mix_final.txt")
 if not mix.exists():
   classical = [x for x in pq.read_table("data/pool/classical_train.parquet").to_pydict()["text"] if clean(x)]
   cchars = sum(map(len, classical))
