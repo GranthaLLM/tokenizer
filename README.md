@@ -52,6 +52,17 @@ Tokens per word, lower is better. This is a cost measure: fewer tokens means che
 
 Sanskrit costs 1.26 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
 
+### Hugging Face
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("release/hf")
+tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], add_generation_prompt=True)
+```
+
+The Hugging Face tokenizer applies NFC first and returns the same ids as SentencePiece on all 3,036 FLORES Sanskrit, English and Hindi lines.
+
 ### Example
 
 The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus: ten words, many long compounds.
