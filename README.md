@@ -45,6 +45,14 @@ assert sp.decode(ids) == "कर्मण्येवाधिकारस्त
 
 Special tokens: `<unk>` 0, `<s>` 1, `</s>` 2 (end of text), `<pad>` 3, chat markers `<|im_start|>` and `<|im_end|>` 4 and 5, and 14 reserved slots (6 to 19). Input should be NFC; the Hugging Face tokenizer applies it for you.
 
+### Try it in the browser
+
+```bash
+python tools/tokenizer_page.py
+```
+
+Type or paste text and see where Grantha cuts it, next to any tokenizer in your local Hugging Face cache (Gemma, Llama, Qwen, Mistral, DeepSeek, Sarvam, Param2 and more).
+
 ### Hugging Face
 
 ```python

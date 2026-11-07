@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grantha Tokenizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --paper:#eef0ee; --ink:#15181f; --muted:#666b74; --rule:#d2d6d2; --field:#f8f9f7;
+  --cut:#b3261e; --bar-us:#15181f; --bar-them:#a3a8b0;
+  --deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN",serif;
+  --ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:#111418; --ink:#e8eae6; --muted:#9097a1; --rule:#2a3038; --field:#171b20;
+    --cut:#ff6b5e; --bar-us:#e8eae6; --bar-them:#59606b;
+  }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 var(--ui); padding-inline:clamp(16px,4vw,40px); }
+main { max-width:1000px; margin-inline:auto; padding-block:clamp(28px,6vw,64px) 80px; display:flex; flex-direction:column; gap:clamp(24px,4vw,40px); }
+:focus-visible { outline:2px solid var(--cut); outline-offset:3px; border-radius:2px; }
+
+header { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; }
+header h1 { font:400 clamp(2.6rem,8vw,4.4rem)/1 var(--deva); margin:0; letter-spacing:0; }
+header p { margin:0; color:var(--muted); max-width:46ch; }
+
+.input { display:flex; flex-direction:column; gap:10px; }
+textarea {
+  width:100%; min-height:7.5rem; resize:vertical; background:var(--field); color:var(--ink);
+  border:1px solid var(--rule); border-radius:3px; padding:16px 18px;
+  font:400 clamp(1.3rem,3.4vw,1.75rem)/1.7 var(--deva);
+}
+textarea::placeholder { color:var(--muted); }
+.tools { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; justify-content:space-between; font-size:.9rem; }
+.presets { display:flex; flex-wrap:wrap; gap:4px 16px; }
+.presets button { all:unset; cursor:pointer; color:var(--muted); text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
+.presets button:hover { color:var(--ink); text-decoration-color:var(--cut); }
+.presets button:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
+.compare { display:flex; align-items:center; gap:10px; }
+.compare label { color:var(--muted); }
+select {
+  font:500 .95rem var(--ui); color:var(--ink); background:var(--field);
+  border:1px solid var(--rule); border-radius:3px; padding:7px 10px; max-width:60vw;
+}
+
+.rows { display:flex; flex-direction:column; }
+.row { padding-block:22px; border-top:1px solid var(--rule); display:flex; flex-direction:column; gap:14px; }
+.row:last-child { border-bottom:1px solid var(--rule); }
+.head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 22px; }
+.head h2 { font:600 1rem var(--ui); margin:0; min-width:9ch; }
+.figure { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.95rem; }
+.figure b { color:var(--ink); font-weight:600; font-size:1.35rem; margin-right:.3em; }
+.bar { height:4px; background:var(--rule); border-radius:2px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:var(--bar-them); transition:width .35s ease; }
+.row.us .bar i { background:var(--bar-us); }
+.flow { font:400 clamp(1.25rem,3.2vw,1.65rem)/2.1 var(--deva); white-space:pre-wrap; overflow-wrap:anywhere; min-height:2.1em; }
+.tk { display:inline; }
+.tk.cut { border-left:1.5px solid var(--cut); margin-left:.12em; padding-left:.12em; }
+.tk.partial { color:var(--muted); }
+.note { color:var(--muted); font:400 .95rem/1.5 var(--ui); }
+.state { color:var(--muted); font:400 .95rem var(--ui); }
+
+.verdict { font-size:1.1rem; margin:0; min-height:1.6em; }
+.legend { color:var(--muted); font-size:.88rem; max-width:70ch; margin:0; }
+.legend .mark { display:inline-block; width:1.5px; height:.95em; background:var(--cut); vertical-align:-.12em; margin-inline:.2em; }
+
+.intro .tk.cut { animation:draw .6s ease-out both; animation-delay:calc(var(--n) * 16ms + .15s); }
+@keyframes draw { from { border-left-color:transparent; } }
+@media (prefers-reduced-motion: reduce) { .intro .tk.cut { animation:none; } .bar i { transition:none; } }
+</style>
+</head>
+<body class="intro">
+<main>
+  <header>
+    <h1 lang="sa">ग्रन्थ</h1>
+    <p>Type Sanskrit or English. See where the tokenizer cuts it, next to a real one you pick.</p>
+  </header>
+
+  <section class="input" aria-label="Text to tokenize">
+    <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text"></textarea>
+    <div class="tools">
+      <div class="presets" id="presets"></div>
+      <div class="compare">
+        <label for="cmp">Compare with</label>
+        <select id="cmp"></select>
+      </div>
+    </div>
+  </section>
+
+  <p class="verdict" id="verdict" aria-live="polite"></p>
+
+  <section class="rows" aria-label="Tokens">
+    <div class="row us">
+      <div class="head"><h2>Grantha 128k</h2><span class="figure" id="us-fig"></span></div>
+      <div class="bar"><i id="us-bar"></i></div>
+      <div class="flow" id="us-flow" lang="sa"></div>
+    </div>
+    <div class="row them" id="them-row" hidden>
+      <div class="head"><h2 id="them-name"></h2><span class="figure" id="them-fig"></span></div>
+      <div class="bar"><i id="them-bar"></i></div>
+      <div class="flow" id="them-flow" lang="sa"></div>
+      <div class="state" id="them-state"></div>
+    </div>
+  </section>
+
+  <p class="legend">A red line <span class="mark"></span> is a cut inside a word. Gaps between words are real spaces and are not marked. A dotted circle ◌ stands for the missing letter in front of a vowel sign, and ▯ is a token that ends in the middle of a letter. Hover a token for its id.</p>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var input = $("in"), cmp = $("cmp"), seq = 0, timer = null, cfg = null;
+
+  function store(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+  function render(host, tokens) {
+    host.textContent = "";
+    var prevInWord = false, n = 0;
+    tokens.forEach(function (tk) {
+      var parts = tk.t.split("\n");
+      parts.forEach(function (seg, si) {
+        if (si > 0) { host.appendChild(document.createElement("br")); prevInWord = false; }
+        if (seg === "") return;
+        var lead = seg.match(/^[ \t]+/), body = lead ? seg.slice(lead[0].length) : seg;
+        if (lead) { host.appendChild(document.createTextNode(lead[0])); prevInWord = false; }
+        if (body === "") return;
+        if (/^\p{M}/u.test(body)) body = "◌" + body;
+        var s = el("span", "tk" + (prevInWord ? " cut" : "") + (tk.partial ? " partial" : ""), body);
+        s.title = "id " + tk.id;
+        s.style.setProperty("--n", n++);
+        host.appendChild(s);
+        prevInWord = true;
+      });
+    });
+  }
+
+  function figure(node, count, perWord, words) {
+    node.textContent = "";
+    node.appendChild(el("b", "", String(count)));
+    node.appendChild(document.createTextNode("tokens" + (words ? ", " + perWord.toFixed(2) + " per word" : "")));
+  }
+
+  function post(text, repo) {
+    return fetch("/api/tokenize", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: text, repo: repo }) }).then(function (r) { return r.json(); });
+  }
+
+  function bars(a, b) {
+    var m = Math.max(a || 0, b || 0, 1);
+    $("us-bar").style.width = (a / m * 100) + "%";
+    if (b != null) $("them-bar").style.width = (b / m * 100) + "%";
+  }
+
+  function verdict(g, o) {
+    var v = $("verdict");
+    if (!o || !g) { v.textContent = ""; return; }
+    var r = o.count / g.count;
+    if (r > 1.02) v.textContent = o.name + " needs " + Math.round((r - 1) * 100) + "% more tokens for this text.";
+    else if (r < 0.98) v.textContent = o.name + " uses " + Math.round((1 - r) * 100) + "% fewer tokens for this text.";
+    else v.textContent = "Both use about the same number of tokens.";
+  }
+
+  function update() {
+    var text = input.value, repo = cmp.value, me = ++seq;
+    store("grantha.text", text); store("grantha.cmp", repo);
+    var themRow = $("them-row");
+    themRow.hidden = !repo;
+    if (!text.trim()) {
+      $("us-flow").textContent = ""; $("us-fig").textContent = ""; $("them-flow").textContent = ""; $("them-fig").textContent = "";
+      $("verdict").textContent = ""; bars(0, 0); $("them-state").textContent = ""; return;
+    }
+    var g = null;
+    post(text, null).then(function (res) {
+      if (me !== seq) return;
+      g = res.grantha;
+      render($("us-flow"), g.tokens);
+      figure($("us-fig"), g.count, res.perWord, res.words);
+      bars(g.count, 0);
+      if (!repo) return;
+      var name = cmp.options[cmp.selectedIndex].textContent;
+      $("them-name").textContent = name;
+      $("them-state").textContent = "Loading " + name + "...";
+      return post(text, repo).then(function (r2) {
+        if (me !== seq) return;
+        if (r2.error) { $("them-state").textContent = r2.error; $("them-flow").textContent = ""; $("them-fig").textContent = ""; $("verdict").textContent = ""; return; }
+        $("them-state").textContent = "";
+        $("them-name").textContent = r2.other.name;
+        render($("them-flow"), r2.other.tokens);
+        figure($("them-fig"), r2.other.count, r2.other.count / Math.max(r2.words, 1), r2.words);
+        bars(g.count, r2.other.count);
+        verdict(g, r2.other);
+      });
+    }).catch(function () { if (me === seq) $("verdict").textContent = "The server did not answer. Is tokenizer_page.py still running?"; });
+  }
+
+  function schedule() { clearTimeout(timer); timer = setTimeout(update, 180); }
+
+  fetch("/api/config").then(function (r) { return r.json(); }).then(function (c) {
+    cfg = c;
+    input.maxLength = c.max;
+    var none = el("option", "", "Nothing"); none.value = ""; cmp.appendChild(none);
+    var groups = {};
+    c.tokenizers.forEach(function (t) {
+      if (!groups[t.group]) { groups[t.group] = el("optgroup"); groups[t.group].label = t.group; cmp.appendChild(groups[t.group]); }
+      var o = el("option", "", t.name); o.value = t.repo; groups[t.group].appendChild(o);
+    });
+    var pres = $("presets");
+    c.presets.forEach(function (p) {
+      var b = el("button", "", p[0]); b.type = "button";
+      b.addEventListener("click", function () { input.value = p[1]; update(); });
+      pres.appendChild(b);
+    });
+    var savedText = load("grantha.text"), savedCmp = load("grantha.cmp");
+    input.value = savedText != null && savedText !== "" ? savedText : c.presets[1][1];
+    var def = savedCmp != null ? savedCmp : "google/gemma-4-12B-it";
+    cmp.value = def; if (cmp.value !== def) cmp.value = "";
+    update();
+    setTimeout(function () { document.body.classList.remove("intro"); }, 2500);
+  });
+
+  input.addEventListener("input", schedule);
+  cmp.addEventListener("change", update);
+})();
+</script>
+</body>
+</html>
