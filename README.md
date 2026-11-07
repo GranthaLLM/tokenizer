@@ -106,6 +106,8 @@ Grantha keeps words such as `नारायणं`, `निखिल`, `पू�
 
 Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On the 258,707 benchmark compounds below, 76.9% of true boundaries are also token boundaries (F1 0.71, 2.75 tokens per word). Gemma 3 / 4 respects 88.9% (F1 0.50) but needs 5.20 tokens per word, because it cuts everything into small pieces. Param2 respects 58.0% (F1 0.34).
 
+On [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (8,964 words with sandhi junctions marked) Grantha reaches F1 0.41 against 0.37 for Gemma 3 / 4 at 2.78 tokens per word instead of 5.12, and finds 56% of the junctions where Gemma finds 90% by cutting everything; the boundary tagger below reaches F1 0.54. SandhiKosh marks sandhi junctions only, so cuts at other word boundaries count as errors and precision is low for every tokenizer. Per-corpus numbers: [`sandhikosh.md`](results/sandhikosh.md).
+
 An experimental boundary tagger, built on the previous release tokenizer and kept in `tools/`, raises this to 97.2% respected and F1 0.86 on a 30,000-word sample, at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
 
 </details>

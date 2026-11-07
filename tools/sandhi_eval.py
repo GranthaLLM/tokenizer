@@ -102,38 +102,27 @@ def main():
     allit = [x for v in items.values() for x in v]
     print({k: len(v) for k, v in items.items()}, "total", len(allit), flush=True)
     models = {
-        "bpe_sa_128k": spm_bounds("data/tok_bpe_128k.model"),
-        "mix50_128": spm_bounds("data/tok_mix50_128.model"),
-        "v2_dcsgr_128": spm_bounds("data/tok_v2_dcsgr_128.model"),
-        "mix50_64": spm_bounds("data/tok_mix50_64.model"),
+        "Grantha 128k": spm_bounds("release/grantha-128k.model"),
+        "Gemma 4": hf_bounds("google/gemma-4-12B-it"),
+        "Gemma 3": hf_bounds("unsloth/gemma-3-4b-it"),
+        "Llama 4": hf_bounds("unsloth/Llama-4-Scout-17B-16E-Instruct"),
+        "Qwen 3.5": hf_bounds("Qwen/Qwen3.5-9B"),
+        "Sarvam-1": hf_bounds("sarvamai/sarvam-1"),
+        "Param2": hf_bounds("bharatgenai/Param2-17B-A2.4B-Thinking"),
     }
-    for k, n in [("gemma3", "unsloth/gemma-3-4b-it"), ("sarvam1", "sarvamai/sarvam-1")]:
-        models[k] = hf_bounds(n)
-    rows = ["| tokenizer | precision | recall | F1 | tokens/word |", "|---|---|---|---|---|"]
+    tags = list(items)
+    rows = [
+        "| tokenizer | precision | recall | F1 | tokens per word | " + " | ".join(f"F1 {t}" for t in tags) + " |",
+        "|" + "---|" * (5 + len(tags)),
+    ]
     for k, fn in models.items():
         p, r, f1, t = score(fn, allit)
-        rows.append(f"| {k} | {p:.3f} | {r:.3f} | {f1:.3f} | {t:.2f} |")
+        per = [score(fn, items[tag])[2] for tag in tags]
+        rows.append(f"| {k} | {p:.3f} | {r:.3f} | {f1:.3f} | {t:.2f} | " + " | ".join(f"{x:.3f}" for x in per) + " |")
         print(rows[-1], flush=True)
-    Path("results/sandhi_alignment.md").write_text("\n".join(rows) + "\n")
+    head = "SandhiKosh (Bhardwaj et al., LREC 2018): " + ", ".join(f"{k} {len(v)}" for k, v in items.items()) + f" words, {len(allit)} in total. A true boundary counts as found if a token ends at it or one letter after.\n\n"
+    Path("results/sandhikosh.md").write_text(head + "\n".join(rows) + "\n")
 
 
 if __name__ == "__main__":
     main()
-
-
-def chance(items, fn, seed=0):
-    import random
-
-    rnd = random.Random(seed)
-    tp = fp = fn_ = 0
-    for w, gold in items:
-        k = fn(w)[1]
-        cuts = set(rnd.sample(range(1, len(w)), min(max(k - 1, 0), len(w) - 1)))
-        ok = {g for g in gold if g in cuts or g + 1 in cuts}
-        near = set(gold) | {g + 1 for g in gold}
-        tp += len(ok)
-        fn_ += len(gold) - len(ok)
-        fp += len([c for c in cuts if c not in near])
-    p = tp / max(tp + fp, 1)
-    r = tp / max(tp + fn_, 1)
-    return p, r, 2 * p * r / max(p + r, 1e-9)
