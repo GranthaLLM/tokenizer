@@ -51,6 +51,8 @@ input.q::placeholder { color:var(--muted); font-weight:400; }
 .list .opt { padding:7px 8px; cursor:pointer; border-radius:2px; }
 .list .opt[aria-selected="true"] { background:var(--rule); }
 .list .none { padding:8px; color:var(--muted); font-size:.9rem; }
+.join { display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); cursor:pointer; }
+.join input { accent-color:var(--cut); width:16px; height:16px; margin:0; }
 .legend { color:var(--muted); font-size:.84rem; line-height:1.5; margin:0; max-width:44ch; }
 .legend .mark { display:inline-block; width:1.5px; height:.95em; background:var(--cut); vertical-align:-.12em; margin-inline:.2em; }
 
@@ -92,6 +94,7 @@ input.q::placeholder { color:var(--muted); font-weight:400; }
     <h1 lang="sa">ग्रन्थ</h1>
     <p class="lede">Type Sanskrit or English and see where each tokenizer cuts it. Runs in your browser.</p>
     <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text to tokenize"></textarea>
+    <label class="join"><input type="checkbox" id="join" checked> Remove spaces between Devanagari words</label>
     <div class="add">
       <label for="q">Compare with</label>
       <div class="combo"><input class="q" id="q" role="combobox" aria-expanded="false" aria-controls="list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search Gemma, Llama, Qwen, Sarvam..."><ul class="list" id="list" role="listbox" hidden></ul></div>
@@ -206,8 +209,9 @@ function layout() {
 }
 
 function paint() {
-  const text = $("in").value.slice(0, MAX);
-  const words = text.split(/\s+/).filter(Boolean).length;
+  const raw = $("in").value.slice(0, MAX);
+  const text = $("join").checked ? raw.replace(/(?<=[\u0900-\u097F])[ \t]+(?=[\u0900-\u097F])/g, "") : raw;
+  const words = raw.split(/\s+/).filter(Boolean).length;
   const g = state.get("grantha");
   const maxCount = Math.max(1, ...order.map((k) => state.get(k).count || 0));
   for (const key of order) {
@@ -293,6 +297,8 @@ async function init() {
   state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
   layout(); refreshAdd(); paint();
   $("in").addEventListener("input", schedule);
+  $("join").checked = load("grantha.join") !== "0";
+  $("join").addEventListener("change", () => { store("grantha.join", $("join").checked ? "1" : "0"); paint(); });
   const q = $("q");
   q.addEventListener("focus", () => { renderList(); openList(true); });
   q.addEventListener("blur", () => openList(false));
