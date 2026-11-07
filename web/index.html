@@ -36,7 +36,7 @@ button { font:inherit; color:inherit; }
 .rail h1 { font:400 clamp(2.8rem,6vw,4.2rem)/1 var(--deva); margin:0; }
 .rail .lede { margin:0; color:var(--muted); max-width:34ch; }
 textarea {
-  width:100%; min-height:9rem; resize:vertical; background:var(--field); color:var(--ink);
+  width:100%; min-height:9rem; max-height:40vh; resize:none; overflow-y:auto; background:var(--field); color:var(--ink);
   border:1px solid var(--rule); border-radius:3px; padding:14px 16px;
   font:400 1.45rem/1.7 var(--deva);
 }
@@ -288,7 +288,8 @@ function remove(key) {
   order.splice(i, 1); state.delete(key); layout(); refreshAdd(); persist(); paint();
 }
 
-function schedule() { clearTimeout(timer); timer = setTimeout(() => { store("grantha.text", $("in").value); paint(); }, 160); }
+function autosize() { const t = $("in"); t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+function schedule() { autosize(); clearTimeout(timer); timer = setTimeout(() => { store("grantha.text", $("in").value); paint(); }, 160); }
 
 async function init() {
   $("in").maxLength = MAX;
@@ -297,6 +298,9 @@ async function init() {
   state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
   layout(); refreshAdd(); paint();
   $("in").addEventListener("input", schedule);
+  window.addEventListener("resize", autosize);
+  autosize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosize);
   $("join").checked = load("grantha.join") !== "0";
   $("join").addEventListener("change", () => { store("grantha.join", $("join").checked ? "1" : "0"); paint(); });
   const q = $("q");
