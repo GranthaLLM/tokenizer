@@ -84,13 +84,6 @@ Every token, one line of the verse per row, `|` between tokens:
 प्राणस्य | सर्व | चिद | चि | त्परमे | श्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
 ```
 
-**Grantha with the boundary tagger** (32 tokens)
-
-```
-नारायणं | निखिल | पूर्ण | गु | णै | क | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | ।
-प्राणस्य | सर्व | चि | दचि | त्प | रमे | श्वरस्य | साक्षा | दधी | श्वर | मि | यां | शरणं | र | मे | शम् | ॥
-```
-
 **Gemma 4** (48 tokens)
 
 ```
@@ -98,7 +91,7 @@ Every token, one line of the verse per row, `|` between tokens:
 प्रा | ण | स्य | सर्व | चि | द | चित | ् | पर | म | ेश्वर | स्य | सा | क्षा | द | धी | श्वर | म | ियां | शरण | ं | रमेश | म् | ॥
 ```
 
-Grantha keeps words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` whole, where Gemma breaks them into letters and bare vowel signs (`ा`, `ं`, `ै`). Neither splits every compound at word boundaries: `सर्वज्ञमच्युतम्` and `साक्षादधीश्वरम्` are still cut inside words. On this verse the tagger variant costs 3 more tokens and is mixed: it cuts `सर्वज्ञ | म | च्यु` the same way but splits `गु | णै | क` badly. Its gain shows over many words (compound F1 0.73 to 0.85 on the human-tagged set), not on one verse.
+Grantha keeps words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` whole, where Gemma breaks them into letters and bare vowel signs (`ा`, `ं`, `ै`). Neither splits every compound at word boundaries: `सर्वज्ञमच्युतम्` and `साक्षादधीश्वरम्` are still cut inside words.
 
 ## Further results
 
