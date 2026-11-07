@@ -10,7 +10,7 @@ Tokens per word, lower is better. This is a cost measure: fewer tokens means che
 
 | tokenizer | FLORES Sanskrit | FLORES English | 41 corpus works | DCS held-out | GRETIL held-out |
 |---|---|---|---|---|---|
-| **Grantha 128k** | **1.90** | **1.17** | **1.99** | **1.68** | **2.05** |
+| **Grantha 128k** | **1.92** | **1.17** | **1.99** | **1.71** | **2.06** |
 | Param2 | 2.32 | 1.49 | 3.43 | 3.00 | 3.78 |
 | Gemma 3 / 4 | 2.83 | 1.24 | 3.53 | 3.22 | 3.82 |
 | Mistral Large 4 | 2.90 | 1.27 | 3.60 | 3.34 | 3.97 |
@@ -24,11 +24,11 @@ Tokens per word, lower is better. This is a cost measure: fewer tokens means che
 - **41 corpus works**: the Sanskrit of `corpus/` (1.46M words), used for inference only.
 - **DCS and GRETIL held-out works**: 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. Text is converted from IAST to Devanagari.
 
-Sanskrit costs 1.26 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+Sanskrit costs 1.27 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
 
 ## Highlights
 
-- **33 to 48% fewer tokens** for Sanskrit than Gemma 3 / 4, and 18 to 46% fewer than Param2, on four benchmarks that include whole works the tokenizer never saw.
+- **32 to 47% fewer tokens** for Sanskrit than Gemma 3 / 4, and 17 to 46% fewer than Param2, on four benchmarks that include whole works the tokenizer never saw.
 - **English is not sacrificed**: 1.17 tokens per word on FLORES, against 1.24 for Gemma 3 / 4.
 - **Clean evaluation**: training text excludes [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus) and every held-out test work.
 - **Ready for a model**: lossless round trip, byte fallback, `<pad>`, chat markers and reserved slots, plus a Hugging Face `tokenizer.json`.
@@ -88,8 +88,8 @@ Every token, one line of the verse per row, `|` between tokens:
 **Grantha 128k** (29 tokens)
 
 ```
-नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | ।
-प्राणस्य | सर्व | चिद | चि | त्परमे | श्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
+नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोष | म् | ।
+प्राणस्य | सर्व | चिद | चित् | परमेश्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
 ```
 
 **Gemma 4** (48 tokens)
@@ -106,9 +106,9 @@ Grantha keeps words such as `नारायणं`, `निखिल`, `पू�
 <details>
 <summary><b>Compound boundaries</b></summary>
 
-Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On the 258,707 benchmark compounds below, 73.0% of true boundaries are also token boundaries (F1 0.68, 2.73 tokens per word). Gemma 3 / 4 respects 88.9% (F1 0.50) but needs 5.20 tokens per word, because it cuts everything into small pieces. Param2 respects 58.0% (F1 0.34).
+Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On the 258,707 benchmark compounds below, 76.9% of true boundaries are also token boundaries (F1 0.71, 2.75 tokens per word). Gemma 3 / 4 respects 88.9% (F1 0.50) but needs 5.20 tokens per word, because it cuts everything into small pieces. Param2 respects 58.0% (F1 0.34).
 
-An experimental boundary tagger, kept in `tools/`, raises this to 97.2% respected and F1 0.86 on a 30,000-word sample, at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
+An experimental boundary tagger, built on the previous release tokenizer and kept in `tools/`, raises this to 97.2% respected and F1 0.86 on a 30,000-word sample, at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
 
 </details>
 
@@ -132,14 +132,15 @@ The few inexact round trips differ only in whitespace. The resolved design costs
 
 | training data | vocab | FLORES Sanskrit | FLORES English | DCS | GRETIL |
 |---|---|---|---|---|---|
-| web pool + DCS + GRETIL (release) | 128k | 1.90 | 1.17 | 1.68 | 2.05 |
-| same, digits not split | 128k | 1.86 | 1.13 | 1.68 | 2.06 |
+| web pool + DCS + GRETIL, space-augmented (release) | 128k | 1.92 | 1.17 | 1.71 | 2.06 |
+| same, without space augmentation | 128k | 1.90 | 1.17 | 1.68 | 2.05 |
+| same, digits not split, no space augmentation | 128k | 1.86 | 1.13 | 1.68 | 2.06 |
 | web pool + DCS | 128k | 1.87 | 1.16 | 1.71 | 2.15 |
 | web pool only | 128k | 1.87 | 1.16 | 1.75 | 2.17 |
 | web pool + DCS + GRETIL | 64k | 2.06 | 1.24 | 1.89 | 2.27 |
 | web pool only | 64k | 2.05 | 1.23 | 1.97 | 2.38 |
 
-Adding DCS and GRETIL lowers classical fertility by 4 to 6% at no cost elsewhere. The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Isolating the danda costs 2 to 5% more Sanskrit tokens. Leaving digits unsplit saves 2% of Sanskrit and 3% of English tokens on FLORES, but multi-digit tokens are known to hurt numeric reasoning, so the release splits digits.
+Space augmentation removes the Sanskrit lines' spaces in 25% of the training lines. It costs 1.4% more Sanskrit tokens, and text with its spaces removed now costs 0.1% more tokens than spaced text instead of 9.1%. Adding DCS and GRETIL lowers classical fertility by 4 to 6% at no cost elsewhere. The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Isolating the danda costs 2 to 5% more Sanskrit tokens. Leaving digits unsplit saves 2% of Sanskrit and 3% of English tokens on FLORES, but multi-digit tokens are known to hurt numeric reasoning, so the release splits digits.
 
 </details>
 
@@ -162,7 +163,7 @@ python tools/score_compounds.py hf:google/gemma-4-12B-it
 
 | tokenizer | precision | recall | F1 | tokens per word |
 |---|---|---|---|---|
-| Grantha 128k | 0.637 | 0.730 | 0.680 | 2.73 |
+| Grantha 128k | 0.660 | 0.769 | 0.710 | 2.75 |
 | Gemma 3 / 4 | 0.350 | 0.889 | 0.503 | 5.20 |
 | Sarvam-1 | 0.341 | 0.886 | 0.492 | 5.34 |
 | Mistral Large 4 | 0.230 | 0.656 | 0.340 | 5.64 |

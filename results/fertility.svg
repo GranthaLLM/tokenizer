@@ -16,8 +16,8 @@ text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12.
 <line x1="336.0" y1="88" x2="336.0" y2="242" class="grid"/>
 <text x="336.0" y="256" text-anchor="middle" class="mut">6</text>
 <text x="110" y="103" text-anchor="end" class="b">Grantha 128k</text>
-<rect x="118" y="92" width="69.0" height="14" class="us"/>
-<text x="192.0" y="103" class="mut">1.90</text>
+<rect x="118" y="92" width="69.8" height="14" class="us"/>
+<text x="192.8" y="103" class="mut">1.92</text>
 <text x="110" y="125" text-anchor="end">Param2</text>
 <rect x="118" y="114" width="84.3" height="14" class="them"/>
 <text x="207.3" y="125" class="mut">2.32</text>
@@ -76,8 +76,8 @@ text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12.
 <line x1="336.0" y1="298" x2="336.0" y2="452" class="grid"/>
 <text x="336.0" y="466" text-anchor="middle" class="mut">6</text>
 <text x="110" y="313" text-anchor="end" class="b">Grantha 128k</text>
-<rect x="118" y="302" width="61.0" height="14" class="us"/>
-<text x="184.0" y="313" class="mut">1.68</text>
+<rect x="118" y="302" width="62.1" height="14" class="us"/>
+<text x="185.1" y="313" class="mut">1.71</text>
 <text x="110" y="335" text-anchor="end">Param2</text>
 <rect x="118" y="324" width="109.0" height="14" class="them"/>
 <text x="232.0" y="335" class="mut">3.00</text>
@@ -106,8 +106,8 @@ text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:12.
 <line x1="736.0" y1="298" x2="736.0" y2="452" class="grid"/>
 <text x="736.0" y="466" text-anchor="middle" class="mut">6</text>
 <text x="510" y="313" text-anchor="end" class="b">Grantha 128k</text>
-<rect x="518" y="302" width="74.5" height="14" class="us"/>
-<text x="597.5" y="313" class="mut">2.05</text>
+<rect x="518" y="302" width="74.8" height="14" class="us"/>
+<text x="597.8" y="313" class="mut">2.06</text>
 <text x="510" y="335" text-anchor="end">Param2</text>
 <rect x="518" y="324" width="137.3" height="14" class="them"/>
 <text x="660.3" y="335" class="mut">3.78</text>

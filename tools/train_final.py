@@ -1,5 +1,7 @@
 import itertools
+import os
 import pickle
+import re
 import random
 import sys
 from pathlib import Path
@@ -40,11 +42,20 @@ def take(paths, budget):
     return out
 
 
-mix = Path("data/mix_final.txt")
+NOSPACE = float(os.environ.get("NOSPACE", "0"))
+DEVA_GAP = re.compile("(?<=[ऀ-ॿ]) +(?=[ऀ-ॿ])")
+
+
+def unspaced(ln):
+    return DEVA_GAP.sub("", ln) if random.random() < NOSPACE and sum("ऀ" <= c <= "ॿ" for c in ln) > len(ln) / 2 else ln
+
+
+mix = Path("data/mix_space.txt" if NOSPACE else "data/mix_final.txt")
 if not mix.exists():
   classical = [x for x in pq.read_table("data/pool/classical_train.parquet").to_pydict()["text"] if clean(x)]
   cchars = sum(map(len, classical))
   lines = classical + take(["data/pool/san_h.txt"], max(SAN - cchars, 0)) + take(["data/pool/en_wiki.txt", "data/pool/en_fineweb.txt"], TOTAL - SAN)
+  lines = [unspaced(x) for x in lines]
   random.shuffle(lines)
   mix.write_text("\n".join(lines) + "\n")
   print(name, "lines", len(lines), "classical lines kept", len(classical), flush=True)
