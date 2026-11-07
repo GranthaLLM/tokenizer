@@ -68,19 +68,37 @@ The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus: te
 | tokenizer | tokens | per word |
 |---|---|---|
 | **Grantha 128k** | **29** | **2.9** |
-| Gemma 3 / 4 | 47 | 4.7 |
+| Gemma 3 / 4 | 48 | 4.8 |
 | Param2 | 50 | 5.0 |
 | Sarvam-1 | 51 | 5.1 |
 | Mistral Large 4 | 53 | 5.3 |
 | Llama-4 | 62 | 6.2 |
 | Qwen3.5 | 72 | 7.2 |
 
+Every token, one line of the verse per row, `|` between tokens:
+
+**Grantha 128k** (29 tokens)
+
 ```
-Grantha  नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | । | प्राणस्य | सर्व | चिद | चि | त्परमे | श्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
-Gemma    न | ारा | यण | ं | निखिल | पूर्ण | गुण | ैक | देह | ं | सर्व | ज्ञ | म | च | ्यु | तम | प | ेत | सम | स्त | द | ोष | म् | । ...
+नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | ।
+प्राणस्य | सर्व | चिद | चि | त्परमे | श्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
 ```
 
-Grantha keeps words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` whole, where the others break them into letters and bare vowel signs. Very long compounds, such as `सर्वज्ञमच्युतमपेत…`, are still cut in places that do not follow word boundaries.
+**Grantha with the boundary tagger** (32 tokens)
+
+```
+नारायणं | निखिल | पूर्ण | गु | णै | क | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | ।
+प्राणस्य | सर्व | चि | दचि | त्प | रमे | श्वरस्य | साक्षा | दधी | श्वर | मि | यां | शरणं | र | मे | शम् | ॥
+```
+
+**Gemma 4** (48 tokens)
+
+```
+न | ारा | यण | ं | निखिल | पूर्ण | गुण | ैक | देह | ं | सर्व | ज्ञ | म | च | ्यु | तम | प | ेत | सम | स्त | द | ोष | म् | ।
+प्रा | ण | स्य | सर्व | चि | द | चित | ् | पर | म | ेश्वर | स्य | सा | क्षा | द | धी | श्वर | म | ियां | शरण | ं | रमेश | म् | ॥
+```
+
+Grantha keeps words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` whole, where Gemma breaks them into letters and bare vowel signs (`ा`, `ं`, `ै`). Neither splits every compound at word boundaries: `सर्वज्ञमच्युतम्` and `साक्षादधीश्वरम्` are still cut inside words. On this verse the tagger variant costs 3 more tokens and is mixed: it cuts `सर्वज्ञ | म | च्यु` the same way but splits `गु | णै | क` badly. Its gain shows over many words (compound F1 0.73 to 0.85 on the human-tagged set), not on one verse.
 
 ## Further results
 
