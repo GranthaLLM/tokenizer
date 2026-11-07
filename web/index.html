@@ -31,11 +31,12 @@ button { font:inherit; color:inherit; }
 .page { max-width:1320px; margin-inline:auto; padding-block:clamp(24px,4vw,56px) 72px;
   display:grid; grid-template-columns:minmax(300px,390px) minmax(0,1fr); gap:clamp(28px,5vw,72px); align-items:start; }
 
-.rail { position:sticky; top:24px; display:flex; flex-direction:column; gap:18px; }
+.rail { display:flex; flex-direction:column; gap:18px; }
+@media (min-width:861px) and (min-height:800px) { .rail { position:sticky; top:24px; } }
 .rail h1 { font:400 clamp(2.8rem,6vw,4.2rem)/1 var(--deva); margin:0; }
 .rail .lede { margin:0; color:var(--muted); max-width:34ch; }
 textarea {
-  width:100%; min-height:12rem; resize:vertical; background:var(--field); color:var(--ink);
+  width:100%; min-height:9rem; resize:vertical; background:var(--field); color:var(--ink);
   border:1px solid var(--rule); border-radius:3px; padding:14px 16px;
   font:400 1.45rem/1.7 var(--deva);
 }
@@ -78,7 +79,6 @@ select { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); b
 
 @media (max-width:860px) {
   .page { grid-template-columns:minmax(0,1fr); }
-  .rail { position:static; }
   textarea { min-height:8rem; }
 }
 </style>
@@ -128,11 +128,11 @@ const OTHERS = [
   ["brahmic", "Brahmic 131K", "Indic", "theschoolofai/BrahmicTokenizer-131K"],
 ];
 const PRESETS = [
-  ["Philosophy", "सृष्टिस्थित्यप्ययेहानियतिदृशितमोबन्धमोक्षाश्चैव"],
-  ["University", "विश्वविद्यालयपरीक्षाफलघोषणासमारोहः"],
-  ["Palace", "राजकुमारीविवाहोत्सवसमारोहः"],
-  ["Mountain", "हिमालयपर्वतशिखरतुषारधवलशोभा"],
-  ["Sentence", "सर्वशास्त्रार्थतत्त्वज्ञानसम्पन्नोऽयं विद्वान् राजसभायां प्रवेशं करोति"],
+  ["Illness", "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते", "Bhartrihari, Shatakatraya"],
+  ["Youth", "कान्ताविश्लेषदुःखव्यतिकरविषमो यौवने चोपभोगः", "Bhartrihari, Shatakatraya"],
+  ["Village", "स्वर्गग्रामकुटीनिवासफलदैः कर्मक्रियाविभ्रमैः", "Bhartrihari, Shatakatraya"],
+  ["Creation", "मन्दकटाक्षमात्रात् सर्गस्थितिप्रलयसंसृतिमोक्षहेतोः", "Madhva, Mahabharata Tatparya Nirnaya"],
+  ["Effort", "अयोग्यसम्प्राप्तिकृतप्रयत्नदोषात् समारोपितमेव शूले", "Madhva, Mahabharata Tatparya Nirnaya"],
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -274,8 +274,8 @@ function schedule() { clearTimeout(timer); timer = setTimeout(() => { store("gra
 async function init() {
   $("in").maxLength = MAX;
   const pres = $("presets");
-  PRESETS.forEach(([name, text]) => {
-    const b = el("button", "", name); b.type = "button";
+  PRESETS.forEach(([name, text, source]) => {
+    const b = el("button", "", name); b.type = "button"; b.title = source;
     b.addEventListener("click", () => { $("in").value = text; store("grantha.text", text); paint(); });
     pres.appendChild(b);
   });
