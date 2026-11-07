@@ -48,7 +48,7 @@ LABELS = {
     "theschoolofai/BrahmicTokenizer-131K": ("Brahmic 131K", "Indic"),
 }
 
-DEFAULT_TEXT = "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते"
+DEFAULT_TEXT = "धाम्ना स्वेन सदा निरस्तकुहकं सत्यं परं धीमहि"
 
 
 def cached_repos():
