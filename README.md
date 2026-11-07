@@ -2,6 +2,30 @@
 
 A 128k-vocabulary SentencePiece BPE tokenizer for Sanskrit (Devanagari) and English, built for GranthaLLM.
 
+## Results
+
+![Tokens per Sanskrit word on four benchmarks](results/fertility.svg)
+
+Tokens per word, lower is better. This is a cost measure: fewer tokens means cheaper to process and more text per context window. The other tokenizers are general multilingual ones, while Grantha is trained on Sanskrit and English only.
+
+| tokenizer | FLORES Sanskrit | FLORES English | 41 corpus works | DCS held-out | GRETIL held-out |
+|---|---|---|---|---|---|
+| **Grantha 128k** | **1.90** | **1.17** | **1.99** | **1.68** | **2.05** |
+| Param2 | 2.32 | 1.49 | 3.43 | 3.00 | 3.78 |
+| Gemma 3 / 4 | 2.83 | 1.24 | 3.53 | 3.22 | 3.82 |
+| Mistral Large 4 | 2.90 | 1.27 | 3.60 | 3.34 | 3.97 |
+| Sarvam-1 | 2.98 | 1.43 | 3.97 | 3.42 | 4.21 |
+| Llama-4 | 3.48 | 1.24 | 4.34 | 3.98 | 4.67 |
+| Qwen3.5 | 4.23 | 1.26 | 5.06 | 4.47 | 5.43 |
+
+**Benchmarks**
+
+- **FLORES-200 devtest**: 1,012 modern Sanskrit sentences, with English and Hindi translations.
+- **41 corpus works**: the Sanskrit of `corpus/` (1.46M words), used for inference only.
+- **DCS and GRETIL held-out works**: 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. Text is converted from IAST to Devanagari.
+
+Sanskrit costs 1.26 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+
 ## Highlights
 
 - **33 to 48% fewer tokens** for Sanskrit than Gemma 3 / 4, and 18 to 46% fewer than Param2, on four benchmarks that include whole works the tokenizer never saw.
@@ -28,30 +52,6 @@ assert sp.decode(ids) == "कर्मण्येवाधिकारस्त
 
 Input should be NFC.
 
-## Results
-
-![Tokens per Sanskrit word on four benchmarks](results/fertility.svg)
-
-Tokens per word, lower is better. This is a cost measure: fewer tokens means cheaper to process and more text per context window. The other tokenizers are general multilingual ones, while Grantha is trained on Sanskrit and English only.
-
-| tokenizer | FLORES Sanskrit | FLORES English | 41 corpus works | DCS held-out | GRETIL held-out |
-|---|---|---|---|---|---|
-| **Grantha 128k** | **1.90** | **1.17** | **1.99** | **1.68** | **2.05** |
-| Param2 | 2.32 | 1.49 | 3.43 | 3.00 | 3.78 |
-| Gemma 3 / 4 | 2.83 | 1.24 | 3.53 | 3.22 | 3.82 |
-| Mistral Large 4 | 2.90 | 1.27 | 3.60 | 3.34 | 3.97 |
-| Sarvam-1 | 2.98 | 1.43 | 3.97 | 3.42 | 4.21 |
-| Llama-4 | 3.48 | 1.24 | 4.34 | 3.98 | 4.67 |
-| Qwen3.5 | 4.23 | 1.26 | 5.06 | 4.47 | 5.43 |
-
-**Benchmarks**
-
-- **FLORES-200 devtest**: 1,012 modern Sanskrit sentences, with English and Hindi translations.
-- **41 corpus works**: the Sanskrit of `corpus/` (1.46M words), used for inference only.
-- **DCS and GRETIL held-out works**: 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. Text is converted from IAST to Devanagari.
-
-Sanskrit costs 1.26 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
-
 ### Hugging Face
 
 ```python
@@ -63,7 +63,7 @@ tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], 
 
 The Hugging Face tokenizer applies NFC first and returns the same ids as SentencePiece on all 3,036 FLORES Sanskrit, English and Hindi lines.
 
-### Example
+## Example
 
 The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus: ten words, many long compounds.
 
