@@ -43,14 +43,7 @@ ids = sp.encode("कर्मण्येवाधिकारस्ते म�
 assert sp.decode(ids) == "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।"
 ```
 
-| id | token | id | token |
-|---|---|---|---|
-| 0 | `<unk>` | 4 | `<\|im_start\|>` |
-| 1 | `<s>` | 5 | `<\|im_end\|>` |
-| 2 | `</s>` (end of text) | 6 to 19 | `<\|reserved_0\|>` to `<\|reserved_13\|>` |
-| 3 | `<pad>` | | |
-
-Input should be NFC.
+Special tokens: `<unk>` 0, `<s>` 1, `</s>` 2 (end of text), `<pad>` 3, chat markers `<|im_start|>` and `<|im_end|>` 4 and 5, and 14 reserved slots (6 to 19). Input should be NFC; the Hugging Face tokenizer applies it for you.
 
 ### Hugging Face
 
