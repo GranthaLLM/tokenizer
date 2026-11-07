@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grantha Tokenizer</title>
+<meta name="description" content="Paste Sanskrit or English and see where Grantha cuts it, next to the real tokenizers of Gemma, Llama, Qwen and more. Runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --paper:#eef0ee; --ink:#15181f; --muted:#666b74; --rule:#d2d6d2; --field:#f8f9f7;
+  --cut:#b3261e; --bar-us:#15181f; --bar-them:#a3a8b0; --worse:#8a2a22;
+  --deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN",serif;
+  --ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:#111418; --ink:#e8eae6; --muted:#9097a1; --rule:#2a3038; --field:#171b20;
+    --cut:#ff6b5e; --bar-us:#e8eae6; --bar-them:#59606b; --worse:#ff9a90;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 var(--ui); padding-inline:clamp(16px,3.5vw,44px); }
+:focus-visible { outline:2px solid var(--cut); outline-offset:3px; border-radius:2px; }
+button { font:inherit; color:inherit; }
+
+.page { max-width:1320px; margin-inline:auto; padding-block:clamp(24px,4vw,56px) 72px;
+  display:grid; grid-template-columns:minmax(300px,390px) minmax(0,1fr); gap:clamp(28px,5vw,72px); align-items:start; }
+
+.rail { position:sticky; top:24px; display:flex; flex-direction:column; gap:18px; }
+.rail h1 { font:400 clamp(2.8rem,6vw,4.2rem)/1 var(--deva); margin:0; }
+.rail .lede { margin:0; color:var(--muted); max-width:34ch; }
+textarea {
+  width:100%; min-height:12rem; resize:vertical; background:var(--field); color:var(--ink);
+  border:1px solid var(--rule); border-radius:3px; padding:14px 16px;
+  font:400 1.45rem/1.7 var(--deva);
+}
+textarea::placeholder { color:var(--muted); }
+.presets { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.9rem; }
+.presets button { all:unset; cursor:pointer; color:var(--muted); text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
+.presets button:hover { color:var(--ink); text-decoration-color:var(--cut); }
+.presets button:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
+.add { display:flex; flex-direction:column; gap:6px; font-size:.9rem; }
+.add label { color:var(--muted); }
+select { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); border:1px solid var(--rule); border-radius:3px; padding:8px 10px; width:100%; }
+.legend { color:var(--muted); font-size:.84rem; line-height:1.5; margin:0; max-width:44ch; }
+.legend .mark { display:inline-block; width:1.5px; height:.95em; background:var(--cut); vertical-align:-.12em; margin-inline:.2em; }
+
+.results { display:flex; flex-direction:column; min-width:0; }
+.block { padding-block:22px; border-top:1px solid var(--rule); display:flex; flex-direction:column; gap:12px; }
+.block:first-child { border-top:0; padding-top:4px; }
+.head { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 20px; }
+.head h2 { font:600 1rem var(--ui); margin:0; }
+.fig { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.92rem; }
+.fig b { color:var(--ink); font-weight:600; font-size:1.3rem; margin-right:.3em; }
+.delta { font-variant-numeric:tabular-nums; font-size:.92rem; color:var(--worse); font-weight:500; }
+.delta.better { color:var(--muted); }
+.drop { all:unset; cursor:pointer; margin-left:auto; color:var(--muted); font-size:.85rem; text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
+.drop:hover { color:var(--ink); text-decoration-color:var(--cut); }
+.drop:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
+.bar { height:4px; background:var(--rule); border-radius:2px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:var(--bar-them); transition:width .35s ease; }
+.block.us .bar i { background:var(--bar-us); }
+.flow { font:400 clamp(1.2rem,2.4vw,1.6rem)/2.1 var(--deva); white-space:pre-wrap; overflow-wrap:anywhere; min-height:2.1em; }
+.tk.cut { border-left:1.5px solid var(--cut); margin-left:.12em; padding-left:.12em; }
+.tk.partial { color:var(--muted); }
+.state { color:var(--muted); font-size:.92rem; }
+.state.err { color:var(--worse); }
+.empty { color:var(--muted); padding-block:8px; }
+
+.intro .tk.cut { animation:draw .6s ease-out both; animation-delay:calc(var(--n) * 16ms + .15s); }
+@keyframes draw { from { border-left-color:transparent; } }
+@media (prefers-reduced-motion:reduce) { .intro .tk.cut { animation:none; } .bar i { transition:none; } }
+
+@media (max-width:860px) {
+  .page { grid-template-columns:minmax(0,1fr); }
+  .rail { position:static; }
+  textarea { min-height:8rem; }
+}
+</style>
+</head>
+<body class="intro">
+<div class="page">
+  <aside class="rail">
+    <h1 lang="sa">ग्रन्थ</h1>
+    <p class="lede">Type Sanskrit or English and see where each tokenizer cuts it. Runs in your browser.</p>
+    <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text to tokenize"></textarea>
+    <div class="presets" id="presets"></div>
+    <div class="add">
+      <label for="add">Compare with</label>
+      <select id="add"></select>
+    </div>
+    <p class="legend">A red line <span class="mark"></span> is a cut inside a word. Gaps between words are real spaces and are not marked. A dotted circle ◌ stands for the missing letter in front of a vowel sign, and ▯ is a token that ends in the middle of a letter. Hover a token for its id.</p>
+  </aside>
+  <section class="results" id="results" aria-label="Tokens" aria-live="polite"></section>
+</div>
+
+<script type="module">
+import { PreTrainedTokenizer, AutoTokenizer, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2";
+env.allowLocalModels = false;
+
+const MAX = 1500;
+const OTHERS = [
+  ["gemma4", "Gemma 4", "Google", "google/gemma-4-12B-it"],
+  ["gemma3", "Gemma 3", "Google", "unsloth/gemma-3-4b-it"],
+  ["llama4", "Llama 4 Scout", "Meta", "unsloth/Llama-4-Scout-17B-16E-Instruct"],
+  ["llama3", "Llama 3", "Meta", "NousResearch/Meta-Llama-3-8B"],
+  ["qwen35", "Qwen 3.5", "Qwen", "Qwen/Qwen3.5-9B"],
+  ["qwen36", "Qwen 3.6", "Qwen", "Qwen/Qwen3.6-27B"],
+  ["qwen3", "Qwen 3", "Qwen", "Qwen/Qwen3-8B"],
+  ["mistral4", "Mistral Large 4", "Mistral", "mistralai/Mistral-Large-4-1T-A52B"],
+  ["deepseek", "DeepSeek V4.1", "DeepSeek", "deepseek-ai/DeepSeek-V4.1-Flash"],
+  ["glm", "GLM 5.3", "Z.ai", "zai-org/GLM-5.3"],
+  ["gptoss", "gpt-oss 20B", "OpenAI", "openai/gpt-oss-20b"],
+  ["olmo3", "Olmo 3", "Ai2", "allenai/Olmo-3-7B-Instruct"],
+  ["granite", "Granite 4.1", "IBM", "ibm-granite/granite-4.1-3b"],
+  ["nemotron", "Nemotron 3.5", "NVIDIA", "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16"],
+  ["command", "Command A+", "Cohere", "CohereLabs/command-a-plus-05-2026-bf16"],
+  ["sarvam1", "Sarvam-1", "Indic", "sarvamai/sarvam-1"],
+  ["sarvamm", "Sarvam-M", "Indic", "sarvamai/sarvam-m"],
+  ["sarvam30", "Sarvam 30B", "Indic", "sarvamai/sarvam-30b"],
+  ["param2", "Param2", "Indic", "bharatgenai/Param2-17B-A2.4B-Thinking"],
+  ["krutrim", "Krutrim-2", "Indic", "krutrim-ai-labs/Krutrim-2-instruct"],
+  ["brahmic", "Brahmic 131K", "Indic", "theschoolofai/BrahmicTokenizer-131K"],
+];
+const PRESETS = [
+  ["Gita 2.47", "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन । मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥"],
+  ["Aitareya verse", "नारायणं निखिलपूर्णगुणैकदेहं सर्वज्ञमच्युतमपेतसमस्तदोषम् ।\nप्राणस्य सर्वचिदचित्परमेश्वरस्य साक्षादधीश्वरमियां शरणं रमेशम् ॥"],
+  ["Long compound", "सृष्टिस्थित्यप्ययेहानियतिदृशितमोबन्धमोक्षाश्चैव"],
+  ["Tat tvam asi", "तत्त्वमसि श्वेतकेतो सोऽहमस्मि ब्रह्मैवाहम्"],
+  ["English", "The Governor's office stated that 19 guards were among the injured."],
+];
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const load = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+const state = new Map();
+const order = ["grantha"];
+let timer = null;
+
+function splitTokens(ids, decode) {
+  const out = []; let committed = "";
+  for (let k = 0; k < ids.length; k++) {
+    const cur = decode(ids.slice(0, k + 1));
+    if (cur.endsWith("�")) { out.push({ t: "▯", partial: true, id: ids[k] }); continue; }
+    out.push({ t: cur.slice(committed.length), partial: false, id: ids[k] });
+    committed = cur;
+  }
+  return out;
+}
+
+function tokenize(tk, text) {
+  const ids = Array.from(tk.encode(text, { add_special_tokens: false }));
+  return splitTokens(ids, (x) => tk.decode(x, { skip_special_tokens: false, clean_up_tokenization_spaces: false }));
+}
+
+function renderFlow(host, tokens) {
+  host.textContent = "";
+  let prevInWord = false, n = 0;
+  for (const tk of tokens) {
+    tk.t.split("\n").forEach((seg, si) => {
+      if (si > 0) { host.appendChild(document.createElement("br")); prevInWord = false; }
+      if (seg === "") return;
+      const lead = seg.match(/^[ \t]+/);
+      let body = lead ? seg.slice(lead[0].length) : seg;
+      if (lead) { host.appendChild(document.createTextNode(lead[0])); prevInWord = false; }
+      if (body === "") return;
+      if (/^\p{M}/u.test(body)) body = "◌" + body;
+      const s = el("span", "tk" + (prevInWord ? " cut" : "") + (tk.partial ? " partial" : ""), body);
+      s.title = "id " + tk.id;
+      s.style.setProperty("--n", n++);
+      host.appendChild(s);
+      prevInWord = true;
+    });
+  }
+}
+
+function block(key) {
+  let b = $("b-" + key);
+  if (b) return b;
+  const s = state.get(key);
+  b = el("div", "block" + (key === "grantha" ? " us" : "")); b.id = "b-" + key;
+  const head = el("div", "head");
+  head.appendChild(el("h2", "", s.name));
+  const fig = el("span", "fig"); fig.dataset.role = "fig"; head.appendChild(fig);
+  const delta = el("span", "delta"); delta.dataset.role = "delta"; head.appendChild(delta);
+  if (key !== "grantha") {
+    const d = el("button", "drop", "Remove"); d.type = "button";
+    d.addEventListener("click", () => remove(key));
+    head.appendChild(d);
+  }
+  const bar = el("div", "bar"); bar.appendChild(el("i"));
+  const flow = el("div", "flow"); flow.dataset.role = "flow"; flow.lang = "sa";
+  const st = el("div", "state"); st.dataset.role = "state";
+  b.append(head, bar, flow, st);
+  return b;
+}
+
+function layout() {
+  const host = $("results");
+  const want = order.map((k) => block(k));
+  want.forEach((b, i) => { if (host.children[i] !== b) host.insertBefore(b, host.children[i] || null); });
+  Array.from(host.children).forEach((c) => { if (!want.includes(c)) c.remove(); });
+}
+
+function paint() {
+  const text = $("in").value.slice(0, MAX);
+  const words = text.split(/\s+/).filter(Boolean).length;
+  const g = state.get("grantha");
+  const maxCount = Math.max(1, ...order.map((k) => state.get(k).count || 0));
+  for (const key of order) {
+    const s = state.get(key), b = block(key);
+    const q = (r) => b.querySelector('[data-role="' + r + '"]');
+    const fig = q("fig"), delta = q("delta"), flow = q("flow"), st = q("state");
+    st.className = "state";
+    if (s.status === "loading") { st.textContent = "Loading " + s.name + " from Hugging Face. The first load can take a few seconds."; flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; continue; }
+    if (s.status === "error") { st.className = "state err"; st.textContent = s.name + " could not be loaded: " + s.error; flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; continue; }
+    st.textContent = "";
+    if (!text.trim()) { flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; b.querySelector(".bar i").style.width = "0"; s.count = 0; continue; }
+    s.tokens = tokenize(s.tk, text); s.count = s.tokens.length;
+    renderFlow(flow, s.tokens);
+    fig.textContent = ""; fig.append(el("b", "", String(s.count)), document.createTextNode("tokens, " + (s.count / Math.max(words, 1)).toFixed(2) + " per word"));
+    if (key === "grantha" || !g.count) delta.textContent = "";
+    else {
+      const r = s.count / g.count;
+      delta.className = "delta" + (r < 1 ? " better" : "");
+      delta.textContent = r >= 1.005 ? "+" + Math.round((r - 1) * 100) + "% vs Grantha" : r <= 0.995 ? "-" + Math.round((1 - r) * 100) + "% vs Grantha" : "same as Grantha";
+    }
+  }
+  const m = Math.max(1, ...order.map((k) => state.get(k).count || 0));
+  for (const key of order) { const b = block(key); b.querySelector(".bar i").style.width = ((state.get(key).count || 0) / m * 100) + "%"; }
+}
+
+function refreshAdd() {
+  const sel = $("add"); sel.textContent = "";
+  const first = el("option", "", "Add a tokenizer..."); first.value = ""; sel.appendChild(first);
+  const groups = {};
+  OTHERS.forEach(([key, name, group]) => {
+    if (order.includes(key)) return;
+    if (!groups[group]) { groups[group] = el("optgroup"); groups[group].label = group; sel.appendChild(groups[group]); }
+    const o = el("option", "", name); o.value = key; groups[group].appendChild(o);
+  });
+}
+
+function persist() { store("grantha.cmp", JSON.stringify(order.slice(1))); }
+
+async function add(key) {
+  if (order.includes(key)) return;
+  const def = OTHERS.find((o) => o[0] === key); if (!def) return;
+  state.set(key, { key, name: def[1], status: "loading", count: 0 });
+  order.push(key); layout(); refreshAdd(); persist(); paint();
+  try {
+    const tk = await AutoTokenizer.from_pretrained(def[3]);
+    state.get(key).tk = tk; state.get(key).status = "ready";
+  } catch (e) {
+    state.get(key).status = "error"; state.get(key).error = String(e && e.message || e).split("\n")[0].slice(0, 160);
+  }
+  paint();
+}
+
+function remove(key) {
+  const i = order.indexOf(key); if (i < 1) return;
+  order.splice(i, 1); state.delete(key); layout(); refreshAdd(); persist(); paint();
+}
+
+function schedule() { clearTimeout(timer); timer = setTimeout(() => { store("grantha.text", $("in").value); paint(); }, 160); }
+
+async function init() {
+  $("in").maxLength = MAX;
+  const pres = $("presets");
+  PRESETS.forEach(([name, text]) => {
+    const b = el("button", "", name); b.type = "button";
+    b.addEventListener("click", () => { $("in").value = text; store("grantha.text", text); paint(); });
+    pres.appendChild(b);
+  });
+  const saved = load("grantha.text");
+  $("in").value = saved ? saved : PRESETS[1][1];
+  state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
+  layout(); refreshAdd(); paint();
+  $("in").addEventListener("input", schedule);
+  $("add").addEventListener("change", (e) => { const v = e.target.value; e.target.value = ""; if (v) add(v); });
+  try {
+    const [tj, cfg] = await Promise.all([fetch("models/grantha/tokenizer.json").then((r) => r.json()), fetch("models/grantha/tokenizer_config.json").then((r) => r.json())]);
+    const g = state.get("grantha"); g.tk = new PreTrainedTokenizer(tj, cfg); g.status = "ready";
+  } catch (e) {
+    const g = state.get("grantha"); g.status = "error"; g.error = String(e && e.message || e).slice(0, 160);
+  }
+  paint();
+  let keys = ["gemma4"];
+  try { const s = JSON.parse(load("grantha.cmp") || "null"); if (Array.isArray(s)) keys = s; } catch (e) {}
+  for (const k of keys) await add(k);
+  setTimeout(() => document.body.classList.remove("intro"), 2500);
+}
+init();
+</script>
+</body>
+</html>

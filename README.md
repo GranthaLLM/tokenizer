@@ -47,11 +47,9 @@ Special tokens: `<unk>` 0, `<s>` 1, `</s>` 2 (end of text), `<pad>` 3, chat mark
 
 ### Try it in the browser
 
-```bash
-python tools/tokenizer_page.py
-```
+Live page: **https://grantha-tokenizer.vercel.app**. Type or paste text and see where Grantha cuts it, next to the real tokenizers of Gemma, Llama, Qwen, Mistral, DeepSeek, Sarvam, Param2 and more. Everything runs in your browser; comparison tokenizers download from Hugging Face on first use.
 
-Type or paste text and see where Grantha cuts it, next to any tokenizer in your local Hugging Face cache (Gemma, Llama, Qwen, Mistral, DeepSeek, Sarvam, Param2 and more).
+The page source is in `web/`. To deploy it, copy `release/hf/tokenizer.json` and `tokenizer_config.json` into `web/models/grantha/`. To run offline against your local Hugging Face cache instead, use `python tools/tokenizer_page.py`.
 
 ### Hugging Face
 
