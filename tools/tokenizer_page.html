@@ -39,10 +39,6 @@ textarea {
 }
 textarea::placeholder { color:var(--muted); }
 .tools { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; justify-content:space-between; font-size:.9rem; }
-.presets { display:flex; flex-wrap:wrap; gap:4px 16px; }
-.presets button { all:unset; cursor:pointer; color:var(--muted); text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
-.presets button:hover { color:var(--ink); text-decoration-color:var(--cut); }
-.presets button:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
 .compare { display:flex; align-items:center; gap:10px; }
 .compare label { color:var(--muted); }
 select {
@@ -86,7 +82,6 @@ select {
   <section class="input" aria-label="Text to tokenize">
     <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text"></textarea>
     <div class="tools">
-      <div class="presets" id="presets"></div>
       <div class="compare">
         <label for="cmp">Compare with</label>
         <select id="cmp"></select>
@@ -213,14 +208,8 @@ select {
       if (!groups[t.group]) { groups[t.group] = el("optgroup"); groups[t.group].label = t.group; cmp.appendChild(groups[t.group]); }
       var o = el("option", "", t.name); o.value = t.repo; groups[t.group].appendChild(o);
     });
-    var pres = $("presets");
-    c.presets.forEach(function (p) {
-      var b = el("button", "", p[0]); b.type = "button";
-      b.addEventListener("click", function () { input.value = p[1]; update(); });
-      pres.appendChild(b);
-    });
     var savedText = load("grantha.text"), savedCmp = load("grantha.cmp");
-    input.value = savedText != null && savedText !== "" ? savedText : c.presets[0][1];
+    input.value = savedText != null && savedText !== "" ? savedText : c.default;
     var def = savedCmp != null ? savedCmp : "google/gemma-4-12B-it";
     cmp.value = def; if (cmp.value !== def) cmp.value = "";
     update();

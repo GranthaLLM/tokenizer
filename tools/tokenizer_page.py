@@ -48,13 +48,7 @@ LABELS = {
     "theschoolofai/BrahmicTokenizer-131K": ("Brahmic 131K", "Indic"),
 }
 
-PRESETS = [
-    ("Illness", "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते"),
-    ("Youth", "कान्ताविश्लेषदुःखव्यतिकरविषमो यौवने चोपभोगः"),
-    ("Village", "स्वर्गग्रामकुटीनिवासफलदैः कर्मक्रियाविभ्रमैः"),
-    ("Creation", "मन्दकटाक्षमात्रात् सर्गस्थितिप्रलयसंसृतिमोक्षहेतोः"),
-    ("Effort", "अयोग्यसम्प्राप्तिकृतप्रयत्नदोषात् समारोपितमेव शूले"),
-]
+DEFAULT_TEXT = "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते"
 
 
 def cached_repos():
@@ -152,7 +146,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/config":
             repos = [{"repo": r, "name": LABELS[r][0], "group": LABELS[r][1]} for r in cached_repos()]
-            self._send(json.dumps({"tokenizers": repos, "presets": PRESETS, "max": MAX_CHARS}, ensure_ascii=False))
+            self._send(json.dumps({"tokenizers": repos, "default": DEFAULT_TEXT, "max": MAX_CHARS}, ensure_ascii=False))
         elif self.path in ("/", "/index.html"):
             page = (Path(__file__).parent / "tokenizer_page.html").read_text(encoding="utf-8")
             self._send(page, "text/html; charset=utf-8")

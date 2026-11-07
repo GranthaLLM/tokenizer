@@ -41,13 +41,16 @@ textarea {
   font:400 1.45rem/1.7 var(--deva);
 }
 textarea::placeholder { color:var(--muted); }
-.presets { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.9rem; }
-.presets button { all:unset; cursor:pointer; color:var(--muted); text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
-.presets button:hover { color:var(--ink); text-decoration-color:var(--cut); }
-.presets button:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
 .add { display:flex; flex-direction:column; gap:6px; font-size:.9rem; }
 .add label { color:var(--muted); }
-select { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); border:1px solid var(--rule); border-radius:3px; padding:8px 10px; width:100%; }
+input.q { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); border:1px solid var(--rule); border-radius:3px; padding:9px 11px; width:100%; }
+input.q::placeholder { color:var(--muted); font-weight:400; }
+.combo { position:relative; }
+.list { position:absolute; left:0; right:0; top:calc(100% + 4px); max-height:min(340px,50vh); overflow-y:auto; background:var(--field); border:1px solid var(--rule); border-radius:3px; margin:0; padding:4px; list-style:none; z-index:5; box-shadow:0 8px 24px rgba(0,0,0,.18); }
+.list .grp { font-size:.78rem; color:var(--muted); padding:8px 8px 2px; }
+.list .opt { padding:7px 8px; cursor:pointer; border-radius:2px; }
+.list .opt[aria-selected="true"] { background:var(--rule); }
+.list .none { padding:8px; color:var(--muted); font-size:.9rem; }
 .legend { color:var(--muted); font-size:.84rem; line-height:1.5; margin:0; max-width:44ch; }
 .legend .mark { display:inline-block; width:1.5px; height:.95em; background:var(--cut); vertical-align:-.12em; margin-inline:.2em; }
 
@@ -89,10 +92,9 @@ select { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); b
     <h1 lang="sa">ग्रन्थ</h1>
     <p class="lede">Type Sanskrit or English and see where each tokenizer cuts it. Runs in your browser.</p>
     <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text to tokenize"></textarea>
-    <div class="presets" id="presets"></div>
     <div class="add">
-      <label for="add">Compare with</label>
-      <select id="add"></select>
+      <label for="q">Compare with</label>
+      <div class="combo"><input class="q" id="q" role="combobox" aria-expanded="false" aria-controls="list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search Gemma, Llama, Qwen, Sarvam..."><ul class="list" id="list" role="listbox" hidden></ul></div>
     </div>
     <p class="legend">A red line <span class="mark"></span> is a cut inside a word. Gaps between words are real spaces and are not marked. A dotted circle ◌ stands for the missing letter in front of a vowel sign, and ▯ is a token that ends in the middle of a letter. Hover a token for its id.</p>
   </aside>
@@ -127,13 +129,7 @@ const OTHERS = [
   ["krutrim", "Krutrim-2", "Indic", "krutrim-ai-labs/Krutrim-2-instruct"],
   ["brahmic", "Brahmic 131K", "Indic", "theschoolofai/BrahmicTokenizer-131K"],
 ];
-const PRESETS = [
-  ["Illness", "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते", "Bhartrihari, Shatakatraya"],
-  ["Youth", "कान्ताविश्लेषदुःखव्यतिकरविषमो यौवने चोपभोगः", "Bhartrihari, Shatakatraya"],
-  ["Village", "स्वर्गग्रामकुटीनिवासफलदैः कर्मक्रियाविभ्रमैः", "Bhartrihari, Shatakatraya"],
-  ["Creation", "मन्दकटाक्षमात्रात् सर्गस्थितिप्रलयसंसृतिमोक्षहेतोः", "Madhva, Mahabharata Tatparya Nirnaya"],
-  ["Effort", "अयोग्यसम्प्राप्तिकृतप्रयत्नदोषात् समारोपितमेव शूले", "Madhva, Mahabharata Tatparya Nirnaya"],
-];
+const DEFAULT_TEXT = "वित्तव्याधिविकारविह्वलगिरां नामापि न श्रूयते";
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
@@ -237,16 +233,35 @@ function paint() {
   for (const key of order) { const b = block(key); b.querySelector(".bar i").style.width = ((state.get(key).count || 0) / m * 100) + "%"; }
 }
 
-function refreshAdd() {
-  const sel = $("add"); sel.textContent = "";
-  const first = el("option", "", "Add a tokenizer..."); first.value = ""; sel.appendChild(first);
-  const groups = {};
-  OTHERS.forEach(([key, name, group]) => {
+let active = -1, shown = [];
+function refreshAdd() { renderList(); }
+function renderList() {
+  const list = $("list"), q = $("q").value.trim().toLowerCase();
+  list.textContent = ""; shown = [];
+  let group = "";
+  OTHERS.forEach(([key, name, grp]) => {
     if (order.includes(key)) return;
-    if (!groups[group]) { groups[group] = el("optgroup"); groups[group].label = group; sel.appendChild(groups[group]); }
-    const o = el("option", "", name); o.value = key; groups[group].appendChild(o);
+    if (q && !(name + " " + grp).toLowerCase().includes(q)) return;
+    if (grp !== group) { group = grp; list.appendChild(el("li", "grp", grp)).setAttribute("role", "presentation"); }
+    const li = el("li", "opt", name); li.setAttribute("role", "option"); li.id = "opt-" + key; li.dataset.key = key;
+    li.addEventListener("mousedown", (e) => { e.preventDefault(); pick(key); });
+    list.appendChild(li); shown.push(li);
   });
+  if (!shown.length) list.appendChild(el("li", "none", q ? "No tokenizer matches." : "All tokenizers are added."));
+  setActive(Math.min(Math.max(active, 0), shown.length - 1));
 }
+function setActive(i) {
+  active = i;
+  shown.forEach((li, k) => li.setAttribute("aria-selected", k === i ? "true" : "false"));
+  const q = $("q");
+  if (i >= 0 && shown[i]) { q.setAttribute("aria-activedescendant", shown[i].id); shown[i].scrollIntoView({ block: "nearest" }); } else q.removeAttribute("aria-activedescendant");
+}
+function openList(open) {
+  const list = $("list");
+  list.hidden = !open; $("q").setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) list.style.maxHeight = Math.min(340, Math.max(150, window.innerHeight - $("q").getBoundingClientRect().bottom - 20)) + "px";
+}
+function pick(key) { $("q").value = ""; openList(false); add(key); }
 
 function persist() { store("grantha.cmp", JSON.stringify(order.slice(1))); }
 
@@ -273,18 +288,21 @@ function schedule() { clearTimeout(timer); timer = setTimeout(() => { store("gra
 
 async function init() {
   $("in").maxLength = MAX;
-  const pres = $("presets");
-  PRESETS.forEach(([name, text, source]) => {
-    const b = el("button", "", name); b.type = "button"; b.title = source;
-    b.addEventListener("click", () => { $("in").value = text; store("grantha.text", text); paint(); });
-    pres.appendChild(b);
-  });
   const saved = load("grantha.text");
-  $("in").value = saved ? saved : PRESETS[0][1];
+  $("in").value = saved ? saved : DEFAULT_TEXT;
   state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
   layout(); refreshAdd(); paint();
   $("in").addEventListener("input", schedule);
-  $("add").addEventListener("change", (e) => { const v = e.target.value; e.target.value = ""; if (v) add(v); });
+  const q = $("q");
+  q.addEventListener("focus", () => { renderList(); openList(true); });
+  q.addEventListener("blur", () => openList(false));
+  q.addEventListener("input", () => { active = 0; renderList(); openList(true); });
+  q.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); openList(true); setActive(Math.min(active + 1, shown.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(Math.max(active - 1, 0)); }
+    else if (e.key === "Enter") { e.preventDefault(); if (shown[active]) pick(shown[active].dataset.key); }
+    else if (e.key === "Escape") { openList(false); q.blur(); }
+  });
   try {
     const [tj, cfg] = await Promise.all([fetch("models/grantha/tokenizer.json").then((r) => r.json()), fetch("models/grantha/tokenizer_config.json").then((r) => r.json())]);
     const g = state.get("grantha"); g.tk = new PreTrainedTokenizer(tj, cfg); g.status = "ready";
