@@ -19,15 +19,6 @@ ids = sp.encode("कर्मण्येवाधिकारस्ते म�
 assert sp.decode(ids) == "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।"
 ```
 
-With Hugging Face `transformers`:
-
-```python
-from transformers import AutoTokenizer
-
-tok = AutoTokenizer.from_pretrained("release/hf")
-tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], add_generation_prompt=True)
-```
-
 | id | token | id | token |
 |---|---|---|---|
 | 0 | `<unk>` | 4 | `<\|im_start\|>` |
@@ -35,7 +26,7 @@ tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], 
 | 2 | `</s>` (end of text) | 6 to 19 | `<\|reserved_0\|>` to `<\|reserved_13\|>` |
 | 3 | `<pad>` | | |
 
-Input should be NFC. The Hugging Face tokenizer applies NFC first and returns the same ids as SentencePiece on all 3,036 FLORES Sanskrit, English and Hindi lines.
+Input should be NFC.
 
 ## Results
 
@@ -163,10 +154,6 @@ Recall is the share of true boundaries that are also token boundaries, so a toke
 | Sanskrit, web | [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), permissive configs (CC0, CC-BY-4.0, ODC-By, MIT, Apache-2.0); mostly Sangraha and IndicCorp | 2.31M lines, 186.6M words |
 | Sanskrit, classical | [DCS](https://github.com/OliverHellwig/sanskrit) (CC BY 4.0) and [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror) (CC BY-NC-SA 4.0), IAST converted to Devanagari | 253 DCS works (3.0M words), 738 GRETIL works (12.5M words) |
 | English | Wikipedia (20231101.en, shard 0) and FineWeb-Edu (sample/10BT, shard 0) | 400M characters |
-
-**Preparation.** Unicode NFC, invisible characters stripped, a Devanagari-share filter, exact line deduplication, and removal of every line that shares a 20-character window with `corpus/` or with a held-out work. FLORES overlap with the training text (1 Sanskrit and 123 English lines) was removed.
-
-**Licence.** Wikipedia is CC BY-SA 4.0 and all GRETIL Sanskrit files are CC BY-NC-SA 4.0. This is fine for internal benchmarking and needs a decision before any public release.
 
 ## Credits
 

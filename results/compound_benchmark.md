@@ -15,9 +15,11 @@ Human-annotated test sets (not produced by any model):
 | UoH samaasa-tagged, 7,429 words | Grantha 128k | 0.674 | 0.783 | 0.725 | 2.25 |
 | | Grantha + boundary tagger | 0.782 | 0.937 | 0.853 | 2.47 |
 | | Gemma 3 | 0.285 | 0.870 | 0.429 | 4.38 |
-| Vedanta, 270 words | Grantha 128k | 0.422 | 0.602 | 0.496 | 4.87 |
-| | Grantha + boundary tagger | 0.555 | 0.995 | 0.712 | 5.87 |
-| | Gemma 3 | 0.253 | 0.778 | 0.382 | 9.34 |
+| Vedanta, 270 words | Grantha 128k | 0.565 | 0.791 | 0.659 | 4.87 |
+| | Grantha + boundary tagger | 0.686 | 0.997 | 0.813 | 5.87 |
+| | Gemma 3 | 0.316 | 0.894 | 0.467 | 9.34 |
 
 UoH data: Department of Sanskrit Studies, University of Hyderabad (sanskrit.uohyd.ac.in/Corpus). Score with `--data benchmark/compounds_samasa_uoh.jsonl.gz`.
 
+
+Vedanta boundaries use the same rule as the DCS set: a vowel fused into the letter before a cut is accepted on either side (`tools/vedanta_gold.py`). The tagger alone, before BPE adds its own cuts, scores P 0.85, R 0.99, F1 0.91 on this set.
