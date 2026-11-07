@@ -128,11 +128,11 @@ const OTHERS = [
   ["brahmic", "Brahmic 131K", "Indic", "theschoolofai/BrahmicTokenizer-131K"],
 ];
 const PRESETS = [
-  ["Gita 2.47", "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन । मा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥"],
-  ["Aitareya verse", "नारायणं निखिलपूर्णगुणैकदेहं सर्वज्ञमच्युतमपेतसमस्तदोषम् ।\nप्राणस्य सर्वचिदचित्परमेश्वरस्य साक्षादधीश्वरमियां शरणं रमेशम् ॥"],
-  ["Long compound", "सृष्टिस्थित्यप्ययेहानियतिदृशितमोबन्धमोक्षाश्चैव"],
-  ["Tat tvam asi", "तत्त्वमसि श्वेतकेतो सोऽहमस्मि ब्रह्मैवाहम्"],
-  ["English", "The Governor's office stated that 19 guards were among the injured."],
+  ["Philosophy", "सृष्टिस्थित्यप्ययेहानियतिदृशितमोबन्धमोक्षाश्चैव"],
+  ["University", "विश्वविद्यालयपरीक्षाफलघोषणासमारोहः"],
+  ["Palace", "राजकुमारीविवाहोत्सवसमारोहः"],
+  ["Mountain", "हिमालयपर्वतशिखरतुषारधवलशोभा"],
+  ["Sentence", "सर्वशास्त्रार्थतत्त्वज्ञानसम्पन्नोऽयं विद्वान् राजसभायां प्रवेशं करोति"],
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -280,7 +280,7 @@ async function init() {
     pres.appendChild(b);
   });
   const saved = load("grantha.text");
-  $("in").value = saved ? saved : PRESETS[1][1];
+  $("in").value = saved ? saved : PRESETS[0][1];
   state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
   layout(); refreshAdd(); paint();
   $("in").addEventListener("input", schedule);

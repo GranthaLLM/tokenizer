@@ -220,7 +220,7 @@ select {
       pres.appendChild(b);
     });
     var savedText = load("grantha.text"), savedCmp = load("grantha.cmp");
-    input.value = savedText != null && savedText !== "" ? savedText : c.presets[1][1];
+    input.value = savedText != null && savedText !== "" ? savedText : c.presets[0][1];
     var def = savedCmp != null ? savedCmp : "google/gemma-4-12B-it";
     cmp.value = def; if (cmp.value !== def) cmp.value = "";
     update();
