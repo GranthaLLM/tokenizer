@@ -1,6 +1,6 @@
 # Grantha Tokenizer
 
-A 128k-vocabulary SentencePiece BPE tokenizer for Sanskrit (Devanagari) and English, built for GranthaLLM.
+A 128k-vocabulary SentencePiece BPE tokenizer for Sanskrit (Devanagari) and English.
 
 ## Results
 
