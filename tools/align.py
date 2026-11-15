@@ -35,6 +35,7 @@ def junctions(surf, comps):
 
 
 def pick(pos, bs, bset, used, changed, n):
+    extra = None
     if pos in bset:
         t, alts = pos, {pos}
     else:
@@ -43,8 +44,9 @@ def pick(pos, bs, bset, used, changed, n):
         t, alts = lo, {lo, hi}
         if lo in used and hi not in used:
             t = hi
+        extra = hi if t == lo else lo
     if changed:
         nxt = [b for b in bs if b > t]
         if nxt:
             alts.add(nxt[0])
-    return t, {a for a in alts if 0 < a < n}
+    return t, {a for a in alts if 0 < a < n}, extra

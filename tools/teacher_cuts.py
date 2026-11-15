@@ -7,6 +7,8 @@ from teacher import comps_from
 from uoh_parse import gold
 
 lab = pickle.load(open("data/teacher_labels.pkl", "rb"))
+if Path("data/resolve_labels.pkl").exists():
+    lab.update(pickle.load(open("data/resolve_labels.pkl", "rb")))
 cuts, dropped = {}, 0
 for w, o in lab.items():
     comps = comps_from(o)

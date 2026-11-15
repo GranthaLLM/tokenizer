@@ -6,7 +6,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from akshara import bounds
+import os
+
 from align import junctions, pick
+
+BOTH = os.environ.get("BOTH") == "1"
 from dcs_morph import DCS, sentences
 from iast import convert_map
 from split_classical import is_test
@@ -24,9 +28,11 @@ def word_gold(surf, comps):
     found = {}
     if comps and len(comps) > 1:
         for pos, changed in junctions(surf, [norm(c) for c in comps]):
-            t, alts = pick(starts[pos], bs, bset, set(found), changed, len(dev))
+            t, alts, extra = pick(starts[pos], bs, bset, set(found), changed, len(dev))
             if 0 < t < len(dev):
                 found.setdefault(t, set()).update(alts)
+            if BOTH and extra is not None and 0 < extra < len(dev):
+                found.setdefault(extra, set()).update(alts)
     targets = sorted(found)
     return dev, targets, [sorted(found[t]) for t in targets]
 

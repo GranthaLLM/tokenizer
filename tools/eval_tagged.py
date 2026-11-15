@@ -16,7 +16,7 @@ import os
 import pickle
 
 TG = os.environ.get("TAGGER", "1")
-tg = Tagger() if TG == "1" else Tagger(f"data/tagger{TG[0]}.pt", f"data/tagger{TG[0]}_vocab.json", hid=192)
+tg = Tagger() if TG == "1" else Tagger(f"data/tagger{TG[0]}.pt", f"data/tagger{TG[0]}_vocab.json", hid=(256 if TG[0] == "6" else 192))
 if TG.endswith("h"):
     tg.override = {w: list(c) for w, c in pickle.load(open("data/teacher_cuts.pkl", "rb")).items()}
 tk = TaggedTok(f"data/tok_{name}.model", tg, mapping)

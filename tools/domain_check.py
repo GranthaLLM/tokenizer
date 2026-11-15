@@ -36,6 +36,8 @@ def main():
         "mix50_128": spm_enc("data/tok_mix50_128.model"),
         "dcsgr_128": spm_enc("data/tok_v2_dcsgr_128.model"),
         "none_128": spm_enc("data/tok_v2_none_128.model"),
+        "final_128": spm_enc("data/tok_final_128.model"),
+        "final_nodigits_128": spm_enc("data/tok_final_nodigits_128.model"),
         "gemma4": hf_enc("google/gemma-4-12B-it"),
         "llama4": hf_enc("unsloth/Llama-4-Scout-17B-16E-Instruct"),
         "qwen3.5": hf_enc("Qwen/Qwen3.5-9B"),

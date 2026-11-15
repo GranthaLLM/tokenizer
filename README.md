@@ -1,28 +1,70 @@
-# Grantha tokenizer
+# Grantha Tokenizer
 
-A joint Sanskrit (Devanagari) and English SentencePiece BPE tokenizer for GranthaLLM. Its training text excludes everything in [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus) and every work used as a test set below, so the corpus stays a clean evaluation set.
-
-Status: v0 candidate, 128k vocabulary. Measured, not yet frozen or released. See [Limits](#limits).
+A 128k-vocabulary SentencePiece BPE tokenizer for Sanskrit (Devanagari) and English.
 
 ## Results
 
 ![Tokens per Sanskrit word on four benchmarks](results/fertility.svg)
 
-This measures cost, not quality: fewer tokens per word is cheaper to process, and no model has been trained on the tokenizer yet. Grantha is trained on Sanskrit and English only, while the others are general multilingual tokenizers. Grantha needs about 33% fewer tokens than the best general-purpose tokenizers (Gemma 3 / 4, Mistral Large 4) on FLORES-200 and 44 to 48% fewer on the corpus and classical works. Against Param2, the closest India-focused rival, the gap is 19% on FLORES and 42 to 46% on the other three. The benchmarks:
+Tokens per word, lower is better. This is a cost measure: fewer tokens means cheaper to process and more text per context window. The other tokenizers are general multilingual ones, while Grantha is trained on Sanskrit and English only.
 
-- **FLORES-200 devtest:** 1,012 modern Sanskrit sentences.
-- **41 corpus works:** the Sanskrit of `corpus/` (1.46M words), inference only.
-- **DCS and GRETIL held-out works:** 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. The text is converted from IAST to Devanagari.
+| tokenizer | FLORES Sanskrit | FLORES English | 41 corpus works | DCS held-out | GRETIL held-out |
+|---|---|---|---|---|---|
+| **Grantha 128k** | **1.92** | **1.17** | **1.99** | **1.71** | **2.06** |
+| Param2 | 2.32 | 1.49 | 3.43 | 3.00 | 3.78 |
+| Gemma 3 / 4 | 2.83 | 1.24 | 3.53 | 3.22 | 3.82 |
+| Mistral Large 4 | 2.90 | 1.27 | 3.60 | 3.34 | 3.97 |
+| Sarvam-1 | 2.98 | 1.43 | 3.97 | 3.42 | 4.21 |
+| Llama-4 | 3.48 | 1.24 | 4.34 | 3.98 | 4.67 |
+| Qwen3.5 | 4.23 | 1.26 | 5.06 | 4.47 | 5.43 |
 
-English is not sacrificed: 1.17 tokens per word on FLORES, against 1.24 for Gemma 3 / 4 and Llama-4, 1.26 for Qwen3.5, 1.27 for Mistral Large 4 and 1.49 for Param2. Sanskrit costs 1.25 times the tokens of its English translation, against 1.77 for Gemma.
+**Benchmarks**
 
-Full tables: [`results/fertility_bilingual.md`](results/fertility_bilingual.md) (FLORES, 30+ tokenizers), [`results/domain_check.md`](results/domain_check.md) (per corpus work), [`results/classical_eval.md`](results/classical_eval.md).
+- **FLORES-200 devtest**: 1,012 modern Sanskrit sentences, with English and Hindi translations.
+- **41 corpus works**: the Sanskrit of `corpus/` (1.46M words), used for inference only.
+- **DCS and GRETIL held-out works**: 18 DCS and 38 GRETIL works, chosen by hashing the work name and removed from every training source. Text is converted from IAST to Devanagari.
 
-Tokenizers not measured: Kimi K3 (its tokenizer needs custom code), Tiny Aya and Apertus (gated). Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+Sanskrit costs 1.27 times the tokens of its English translation, against 1.77 for Gemma 3 / 4. Complete tables: [`fertility_bilingual.md`](results/fertility_bilingual.md) (30+ tokenizers), [`domain_check.md`](results/domain_check.md) (per corpus work) and [`classical_eval.md`](results/classical_eval.md). Kimi K3 (custom tokenizer code), Tiny Aya and Apertus (gated) were not measured. Gemma 4 and Sarvam-30B use the Gemma 3 tokenizer, so one row covers them.
+
+## Highlights
+
+- **32 to 47% fewer tokens** for Sanskrit than Gemma 3 / 4, and 17 to 46% fewer than Param2, on four benchmarks that include whole works the tokenizer never saw.
+- **English is not sacrificed**: 1.17 tokens per word on FLORES, against 1.24 for Gemma 3 / 4.
+- **Clean evaluation**: training text excludes [`GranthaLLM/corpus`](https://github.com/GranthaLLM/corpus) and every held-out test work.
+- **Ready for a model**: lossless round trip, byte fallback, `<pad>`, chat markers and reserved slots, plus a Hugging Face `tokenizer.json`.
+
+## Quick start
+
+```python
+import sentencepiece as spm
+
+sp = spm.SentencePieceProcessor(model_file="release/grantha-128k.model")
+ids = sp.encode("कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।")
+assert sp.decode(ids) == "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।"
+```
+
+Special tokens: `<unk>` 0, `<s>` 1, `</s>` 2 (end of text), `<pad>` 3, chat markers `<|im_start|>` and `<|im_end|>` 4 and 5, and 14 reserved slots (6 to 19). Input should be NFC; the Hugging Face tokenizer applies it for you.
+
+### Try it in the browser
+
+Live page: **https://grantha-tokenizer.vercel.app**. Type or paste text and see where Grantha cuts it, next to the real tokenizers of Gemma, Llama, Qwen, Mistral, DeepSeek, Sarvam, Param2 and more. Everything runs in your browser; comparison tokenizers download from Hugging Face on first use.
+
+The page source is in `web/`. To deploy it, copy `release/hf/tokenizer.json` and `tokenizer_config.json` into `web/models/grantha/`. To run offline against your local Hugging Face cache instead, use `python tools/tokenizer_page.py`.
+
+### Hugging Face
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("release/hf")
+tok.apply_chat_template([{"role": "user", "content": "अनुवादय"}], add_generation_prompt=True)
+```
+
+The Hugging Face tokenizer applies NFC first and returns the same ids as SentencePiece on all 3,036 FLORES Sanskrit, English and Hindi lines.
 
 ## Example
 
-The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus. Ten words, many long compounds. Each `|` is a cut between tokens.
+The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus: ten words, many long compounds.
 
 ```
 नारायणं निखिलपूर्णगुणैकदेहं सर्वज्ञमच्युतमपेतसमस्तदोषम् ।
@@ -31,108 +73,122 @@ The opening verse of Madhva's Aitareya Upanishad commentary, from the corpus. Te
 
 | tokenizer | tokens | per word |
 |---|---|---|
-| **Grantha 128k** | **29** | 2.9 |
+| **Grantha 128k** | **29** | **2.9** |
+| Gemma 3 / 4 | 48 | 4.8 |
 | Param2 | 50 | 5.0 |
-| Gemma 3 / 4 | 47 | 4.7 |
-| Mistral Large 4 | 53 | 5.3 |
 | Sarvam-1 | 51 | 5.1 |
+| Mistral Large 4 | 53 | 5.3 |
 | Llama-4 | 62 | 6.2 |
 | Qwen3.5 | 72 | 7.2 |
 
-- **Grantha 128k, 29 tokens:** नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोषम् | । | प्राणस्य | सर्व | चिद | चि | त्परमे | श्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
+Every token, one line of the verse per row, `|` between tokens:
 
-- **Param2, 50 tokens:** नार | ाय | णं | निख | िल | पूर्ण | गुण | ैक | देह | ं | सर्व | ज्ञ | म | च | ्य | ुत | म | प | ेत | सम | स्त | दोष | म् | · | । | प्राण | स्य | सर्व | च | िद | चित | ्प | रम | ेश | ्वर | स्य | साक्ष | ाद | धी | श्वर | म | ियां | श | रणं | र | म | ेश | म् | � | �
+**Grantha 128k** (29 tokens)
 
-- **Gemma 3 / 4, 47 tokens:** न | ारा | यण | ं | निखिल | पूर्ण | गुण | ैक | देह | ं | सर्व | ज्ञ | म | च | ्यु | तम | प | ेत | सम | स्त | द | ोष | म् | । | प्राण | स्य | सर्व | चि | द | चित | ् | पर | म | ेश्वर | स्य | सा | क्षा | द | धी | श्वर | म | ियां | शरण | ं | रमेश | म् | ॥
+```
+नारायणं | निखिल | पूर्ण | गुण | ैक | देहं | सर्वज्ञ | म | च्यु | तम | पेत | समस्त | दोष | म् | ।
+प्राणस्य | सर्व | चिद | चित् | परमेश्वरस्य | साक्षाद | धी | श्वर | मि | यां | शरणं | रमे | शम् | ॥
+```
 
-<details><summary>The other four tokenizers</summary>
+**Gemma 4** (48 tokens)
 
-- **Mistral Large 4, 53 tokens:** न | ार | ायण | ं | न | िख | िल | पूर्ण | गु | ण | ैक | द | ेह | ं | सर्व | ज्ञ | म | च | ्य | ुत | म | प | ेत | सम | स्त | द | ोष | म् | । | प्राण | स्य | सर्व | च | िद | चित | ्प | र | म | ेश्वर | स्य | साक्ष | ाद | धी | श्वर | म | ियां | श | रण | ं | रम | ेश | म् | ॥
+```
+न | ारा | यण | ं | निखिल | पूर्ण | गुण | ैक | देह | ं | सर्व | ज्ञ | म | च | ्यु | तम | प | ेत | सम | स्त | द | ोष | म् | ।
+प्रा | ण | स्य | सर्व | चि | द | चित | ् | पर | म | ेश्वर | स्य | सा | क्षा | द | धी | श्वर | म | ियां | शरण | ं | रमेश | म् | ॥
+```
 
-- **Sarvam-1, 51 tokens:** नारायण | ं | नि | ख | िल | पूर्ण | गु | ण | ैक | देह | ं | सर्व | ज्ञ | म | च्यु | तम | प | ेत | सम | स्त | दो | ष | म् | । | प्राण | स्य | सर्व | चि | द | चित | ् | पर | म | ेश्वर | स्य | साक्षा | द | धी | श्वर | म | ियां | श | रण | ं | रम | ेश | म् | · | � | � | �
+Grantha keeps words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` whole, where Gemma breaks them into letters and bare vowel signs (`ा`, `ं`, `ै`). Neither splits every compound at word boundaries: `सर्वज्ञमच्युतम्` and `साक्षादधीश्वरम्` are still cut inside words.
 
-- **Llama-4, 62 tokens:** न | ार | ाय | ण | ं | न | िख | िल | पूर्ण | ग | ुण | ैक | द | ेह | ं | सर्व | ज्ञ | म | च | ्य | ुत | म | प | ेत | सम | स्त | द | ोष | म | ् | । | प्र | ाण | स्य | सर्व | च | िद | चित | ्प | र | म | ेश्वर | स्य | सा� | � | ्ष | ाद | धी | श | ्वर | म | ियां | श | रण | ं | र | म | ेश | म | ् | � | �
+## Further results
 
-- **Qwen3.5, 72 tokens:** न | ारा | य | ण | ं | नि | ख | िल | पूर्ण | ग | ु | ण | ै | क | दे | ह | ं | सर्व | ज्ञ | म | च | ्य | ु | त | म | प | ेत | स | म | स्त | द | ो | ष | म् | । | प्रा | ण | स | ्य | सर्व | च | ि | द | चित | ् | पर | म | ेश | ्व | र | स | ्य | सा | क्षा | द | धी | श | ्व | र | म | िया | ं | श | रण | ं | र | म | ेश | म् | · | � | �
+<details>
+<summary><b>Compound boundaries</b></summary>
+
+Sandhi and compounds hide where words end, and BPE cuts at frequent letter strings instead. On the 258,707 benchmark compounds below, 76.9% of true boundaries are also token boundaries (F1 0.71, 2.75 tokens per word). Gemma 3 / 4 respects 88.9% (F1 0.50) but needs 5.20 tokens per word, because it cuts everything into small pieces. Param2 respects 58.0% (F1 0.34).
+
+On [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (8,964 words with sandhi junctions marked) Grantha reaches F1 0.41 against 0.37 for Gemma 3 / 4 at 2.78 tokens per word instead of 5.12, and finds 56% of the junctions where Gemma finds 90% by cutting everything; the boundary tagger below reaches F1 0.54. SandhiKosh marks sandhi junctions only, so cuts at other word boundaries count as errors and precision is low for every tokenizer. Per-corpus numbers: [`sandhikosh.md`](results/sandhikosh.md).
+
+An experimental boundary tagger, built on the previous release tokenizer and kept in `tools/`, raises this to 97.2% respected and F1 0.86 on a 30,000-word sample, at 3 to 12% more tokens. A 91M-parameter GPT trained with it ties with the plain tokenizer within 0.6% bits per byte (one seed), so correct splitting costs no model quality at that scale and no gain was shown. The tagger is not part of the release. Numbers: [`tagged_eval.md`](results/tagged_eval.md) and `results/proxy_*.json`.
 
 </details>
 
-Grantha keeps whole words such as `नारायणं`, `निखिल`, `पूर्ण`, `सर्वज्ञ` and `प्राणस्य` intact, where the others break them into letters and bare vowel signs. It is not perfect: long compounds are cut at the wrong place in several spots, for example `सर्वज्ञमच्युतमपेत…`, which runs on past the word boundaries.
+<details>
+<summary><b>Resolved-word tokenizer (experimental)</b></summary>
 
-## Variants
+A second design tokenizes the sandhi-resolved words (`स्थिति`, `अप्यय`) and rebuilds the original text with learned join rules (`tools/sandhi.py`, `tools/resolved.py`). Resolution is only accepted when the join reproduces the original word exactly, so the round trip is lossless by construction. With a dictionary of 3M ByT5-Sanskrit labels and no live model:
+
+| set | tokens per word, plain | tokens per word, resolved | word occurrences resolved | exact round trip |
+|---|---|---|---|---|
+| FLORES Sanskrit | 1.90 | 1.96 | 6.1% | 94.7% |
+| DCS held-out | 1.69 | 1.86 | 11.9% | 100.0% |
+| GRETIL held-out | 2.06 | 2.27 | 14.8% | 99.8% |
+
+The few inexact round trips differ only in whitespace. The resolved design costs 3 to 10% more tokens and only covers compounds found in the dictionary, since resolving an unseen word needs a model. It is not part of the release.
+
+</details>
+
+<details>
+<summary><b>Training variants</b></summary>
 
 | training data | vocab | FLORES Sanskrit | FLORES English | DCS | GRETIL |
 |---|---|---|---|---|---|
-| web pool + DCS + GRETIL | 128k | 1.89 | 1.17 | 1.68 | 2.05 |
+| web pool + DCS + GRETIL, space-augmented (release) | 128k | 1.92 | 1.17 | 1.71 | 2.06 |
+| same, without space augmentation | 128k | 1.90 | 1.17 | 1.68 | 2.05 |
+| same, digits not split, no space augmentation | 128k | 1.86 | 1.13 | 1.68 | 2.06 |
 | web pool + DCS | 128k | 1.87 | 1.16 | 1.71 | 2.15 |
 | web pool only | 128k | 1.87 | 1.16 | 1.75 | 2.17 |
 | web pool + DCS + GRETIL | 64k | 2.06 | 1.24 | 1.89 | 2.27 |
 | web pool only | 64k | 2.05 | 1.23 | 1.97 | 2.38 |
 
-The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Making the danda a standalone piece costs 2 to 5% more Sanskrit tokens.
+Space augmentation removes the Sanskrit lines' spaces in 25% of the training lines. It costs 1.4% more Sanskrit tokens, and text with its spaces removed now costs 0.1% more tokens than spaced text instead of 9.1%. Adding DCS and GRETIL lowers classical fertility by 4 to 6% at no cost elsewhere. The Sanskrit share of the training mix barely matters between 30% and 70% (64k runs), so the final mix is 50/50. Isolating the danda costs 2 to 5% more Sanskrit tokens. Leaving digits unsplit saves 2% of Sanskrit and 3% of English tokens on FLORES, but multi-digit tokens are known to hurt numeric reasoning, so the release splits digits.
 
-Adding DCS and GRETIL lowers classical fertility by 4 to 6% and costs almost nothing elsewhere. Your corpus works go from 1.99 to 1.98.
+</details>
 
-## Sandhi boundaries
+## Benchmark
 
-[SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh), 8,964 single-word gold splits. A cut counts if it falls at the gold point or one character after. A tokenizer that cuts more often scores higher by luck, so the table includes a random baseline with the same cut count.
+The held-out material doubles as a benchmark for Sanskrit tokenizers.
 
-| tokenizer | F1 | random F1 at same cut count | F1 above random |
-|---|---|---|---|
-| Grantha 128k, web pool only | 0.416 | 0.235 | +0.18 |
-| Grantha 128k, + DCS + GRETIL | 0.407 | 0.235 | +0.17 |
-| Gemma 3 / 4 | 0.368 | 0.279 | +0.09 |
-| Sarvam-1 | 0.363 | 0.271 | +0.09 |
+| file | contents |
+|---|---|
+| `benchmark/compounds_test.jsonl.gz` | 258,707 compounds from 18 held-out DCS works. Each item has the word and its boundaries, each boundary a list of acceptable cut positions (sandhi can fuse a vowel into the letter before the cut) |
+| `benchmark/unsplit_controls.txt.gz` | 104,863 words DCS does not split |
+| `benchmark/heldout_text.parquet`, `heldout_works.json` | Text of the 18 held-out DCS works (CC BY 4.0), and the names of all 56 held-out works. GRETIL is CC BY-NC-SA, so its text is not redistributed here; rebuild it from the [GRETIL mirror](https://github.com/INDOLOGY/GRETIL-mirror) with `tools/build_classical.py` and `tools/split_classical.py` |
+| `benchmark/compounds_samasa_uoh.jsonl.gz` | 7,429 compounds from the University of Hyderabad samaasa-tagged corpus, split by human annotators. The written word is rebuilt from the tagged components and kept only if it occurs in our corpus |
+| `benchmark/compounds_vedanta.jsonl.gz` | 270 long Madhva-style Vedanta words (733 boundaries), split by hand into real words. Vedic mantras with accent marks are left out |
 
-The gold labels are the underlying split, so the cut position is approximated by common prefix. Treat the numbers as relative.
+```bash
+python tools/score_compounds.py sp:release/grantha-128k.model
+python tools/score_compounds.py hf:google/gemma-4-12B-it
+```
 
-## Compound boundaries
-
-Sanskrit compounds and sandhi hide where words end, and plain BPE cuts at frequent letter strings instead. We measure this on 238,889 compounds from 18 DCS works held out of every training source. A cut counts as right if it is at, or next to, the true boundary at an akshara edge, because sandhi can fuse a vowel into the letter before it.
-
-| tokenizer | cuts that are right | true boundaries respected | F1 | tokens per word, FLORES / DCS / GRETIL |
+| tokenizer | precision | recall | F1 | tokens per word |
 |---|---|---|---|---|
-| Grantha 128k | 0.585 | 76.5% | 0.663 | 1.89 / 1.68 / 2.05 |
-| Grantha 128k + boundary tagger | 0.707 | 99.1% | 0.825 | 1.93 / 1.75 / 2.23 |
-| Gemma 3 / 4 | 0.295 | 90.0% | 0.445 | 2.83 / 3.22 / 3.82 |
-| Param2 | 0.204 | 62.5% | 0.308 | 2.32 / 3.00 / 3.78 |
+| Grantha 128k | 0.660 | 0.769 | 0.710 | 2.75 |
+| Gemma 3 / 4 | 0.350 | 0.889 | 0.503 | 5.20 |
+| Sarvam-1 | 0.341 | 0.886 | 0.492 | 5.34 |
+| Mistral Large 4 | 0.230 | 0.656 | 0.340 | 5.64 |
+| Param2 | 0.235 | 0.580 | 0.335 | 4.99 |
 
-The boundary tagger variant puts an invisible mark at compound and sandhi joints before tokenization, and BPE is trained so no piece crosses a mark. The marks are dropped from the output, so decoding returns the original text. The tagger is a small character model trained on DCS gold splits and on labels from [ByT5-Sanskrit](https://aclanthology.org/2024.findings-emnlp.805.pdf) for 263k Vedanta-style, Bhagavata and pool words. The tokenizer then also needs the tagger at use time.
-
-Known gaps:
-
-- A piece can still hold a fused akshara together with its neighbour: `ईहा नियति` comes out as `हानि | यति`, because the vowel fuses into `हा`.
-- The tagger is a student of ByT5-Sanskrit and misses some very long compounds. ByT5-Sanskrit itself splits them correctly but runs at about 35 to 90 words per second on a laptop.
-- DCS is mostly epic and Purana text, and the labels outside it come from ByT5, not from people. There is no human-checked Vedanta compound test yet.
-- UoH sandhi splits mark only sandhi joints, not whole compounds, so they were not used as gold for compounds.
+Recall is the share of true boundaries that are also token boundaries, so a tokenizer can raise it by cutting more. Read it with tokens per word. The gold boundaries come from DCS annotation, which is stronger on epic and Purana text than on philosophical prose. The Vedanta set is not yet human-checked.
 
 ## Training data
 
-| part | source | notes |
+| part | source | size |
 |---|---|---|
-| Sanskrit, web | [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), permissive configs (CC0, CC-BY-4.0, ODC-By, MIT, Apache-2.0) | 2.31M lines, 186.6M words after cleaning. Mostly Sangraha and IndicCorp web and scan text |
-| Sanskrit, classical | [DCS](https://github.com/OliverHellwig/sanskrit) (CC BY 4.0), [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror) Sanskrit TEI files (CC BY-NC-SA 4.0) | 253 DCS works (3.0M words) and 738 GRETIL works (12.5M words) after holdout, `corpus/` overlap and duplicate removal. IAST converted to Devanagari with `tools/iast.py` |
-| English | Wikipedia (20231101.en, shard 0), FineWeb-Edu (sample/10BT shard 0) | 400M characters in the mix |
+| Sanskrit, web | [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), permissive configs (CC0, CC-BY-4.0, ODC-By, MIT, Apache-2.0); mostly Sangraha and IndicCorp | 2.31M lines, 186.6M words |
+| Sanskrit, classical | [DCS](https://github.com/OliverHellwig/sanskrit) (CC BY 4.0) and [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror) (CC BY-NC-SA 4.0), IAST converted to Devanagari | 253 DCS works (3.0M words), 738 GRETIL works (12.5M words) |
+| English | Wikipedia (20231101.en, shard 0) and FineWeb-Edu (sample/10BT, shard 0) | 400M characters |
 
-Cleaning: Unicode NFC, invisible characters stripped, a Devanagari-share filter, removal of any line sharing a 20-character window with `corpus/` Sanskrit (about 4% of lines) or with a held-out work, exact line deduplication. FLORES overlap with training text was 1 Sanskrit and 123 English lines, removed.
-
-Licence note: Wikipedia is CC BY-SA 4.0 and every GRETIL Sanskrit file is CC BY-NC-SA 4.0. This does not matter for internal benchmarking. It does for any public release of the +GRETIL variant.
+The tokenizer is trained with spaces removed from 25% of the Sanskrit lines, so a word has nearly the same pieces whether or not spaces surround it.
 
 ## Credits
 
-- [ByT5-Sanskrit](https://arxiv.org/abs/2409.13920) (Nehrdich, Hellwig and Keutzer, EMNLP Findings 2024), model `chronbmm/sanskrit5-multitask`. It labels compound boundaries for the tagger, and the demo can call it live. The paper states Apache 2.0.
-- [Digital Corpus of Sanskrit](https://github.com/OliverHellwig/sanskrit) (Oliver Hellwig), CC BY 4.0. Gold word splits for the tagger and the held-out compound test.
-- [Sanskrit corpus of the University of Hyderabad](http://sanskrit.uohyd.ac.in/Corpus/), Department of Sanskrit Studies. Source of Nyaya and philosophy words that were labeled by ByT5-Sanskrit.
-- [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), which collects [Sangraha](https://huggingface.co/datasets/ai4bharat/sangraha) (AI4Bharat), IndicCorp and others. [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror). [Setutila Sarvamula](https://github.com/Setutila/Sarvamula) texts (CC0).
-- [FLORES-200](https://github.com/facebookresearch/flores) (Meta) and [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (Bhardwaj et al., LREC 2018) for evaluation.
+- [Digital Corpus of Sanskrit](https://github.com/OliverHellwig/sanskrit) (Oliver Hellwig): training text and the held-out test works.
+- [Sansar](https://huggingface.co/datasets/MuseMesh/sansar-sanskrit-corpus), which collects [Sangraha](https://huggingface.co/datasets/ai4bharat/sangraha) (AI4Bharat), IndicCorp and others; [GRETIL](https://github.com/INDOLOGY/GRETIL-mirror).
+- [FLORES-200](https://github.com/facebookresearch/flores) (Meta) and [SandhiKosh](https://github.com/sanskrit-sandhi/SandhiKosh) (Bhardwaj et al., LREC 2018): evaluation.
+- [Department of Sanskrit Studies, University of Hyderabad](https://sanskrit.uohyd.ac.in/Corpus/) (Amba Kulkarni and colleagues): the human-annotated sandhi and samaasa corpora behind two benchmark sets.
+- The experimental tagger uses labels from [ByT5-Sanskrit](https://arxiv.org/abs/2409.13920) (Nehrdich, Hellwig and Keutzer, EMNLP Findings 2024).
 
-## Limits
+## License
 
-- Fertility is a cost measure. No model has been trained with this tokenizer yet, so there is no quality result.
-- About 2% of training lines share a short phrase (a 20-character window) with `corpus/`. These are formulae, not passages.
-- DCS and GRETIL text is transliterated by our own converter and keeps editorial conventions such as `प्य् उक्तं`, so some of it is split at sandhi in a way fused text is not.
-- Tokens per word is a weak unit for Sanskrit because sandhi fuses words, and it is noisy on GRETIL because some files are set without spaces.
-- Long compounds are the weak spot (see Compound boundaries). Ordinary words are fine: 71% stay whole.
-- No `tokenizer.json`, special tokens or round-trip tests yet.
-- Digit splitting, NFC-only normalisation and danda handling were chosen, not ablated.
-- Parity-aware BPE and vocabulary extension of an existing tokenizer were not run.
+Apache-2.0 for the code and the tokenizer files (see `LICENSE`). The DCS text in `benchmark/` is CC BY 4.0 (Oliver Hellwig); the UoH compound set is derived from the University of Hyderabad samaasa corpus.

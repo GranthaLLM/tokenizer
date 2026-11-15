@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grantha Tokenizer</title>
+<meta name="description" content="Paste Sanskrit or English and see where Grantha cuts it, next to the real tokenizers of Gemma, Llama, Qwen and more. Runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Tiro+Devanagari+Sanskrit:ital@0;1&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --paper:#eef0ee; --ink:#15181f; --muted:#666b74; --rule:#d2d6d2; --field:#f8f9f7;
+  --cut:#b3261e; --bar-us:#15181f; --bar-them:#a3a8b0; --worse:#8a2a22;
+  --deva:"Tiro Devanagari Sanskrit","Noto Serif Devanagari","Kohinoor Devanagari","Devanagari Sangam MN",serif;
+  --ui:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:#111418; --ink:#e8eae6; --muted:#9097a1; --rule:#2a3038; --field:#171b20;
+    --cut:#ff6b5e; --bar-us:#e8eae6; --bar-them:#59606b; --worse:#ff9a90;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 var(--ui); padding-inline:clamp(16px,3.5vw,44px); }
+:focus-visible { outline:2px solid var(--cut); outline-offset:3px; border-radius:2px; }
+button { font:inherit; color:inherit; }
+
+.page { max-width:1320px; margin-inline:auto; padding-block:clamp(24px,4vw,56px) 72px;
+  display:grid; grid-template-columns:minmax(300px,390px) minmax(0,1fr); gap:clamp(28px,5vw,72px); align-items:start; }
+
+.rail { display:flex; flex-direction:column; gap:18px; }
+@media (min-width:861px) and (min-height:800px) { .rail { position:sticky; top:24px; } }
+.rail h1 { font:400 clamp(2.8rem,6vw,4.2rem)/1 var(--deva); margin:0; }
+.rail .lede { margin:0; color:var(--muted); max-width:34ch; }
+textarea {
+  width:100%; min-height:9rem; max-height:40vh; resize:none; overflow-y:auto; background:var(--field); color:var(--ink);
+  border:1px solid var(--rule); border-radius:3px; padding:14px 16px;
+  font:400 1.45rem/1.7 var(--deva);
+}
+textarea::placeholder { color:var(--muted); }
+.add { display:flex; flex-direction:column; gap:6px; font-size:.9rem; }
+.add label { color:var(--muted); }
+input.q { font:500 .95rem var(--ui); color:var(--ink); background:var(--field); border:1px solid var(--rule); border-radius:3px; padding:9px 11px; width:100%; }
+input.q::placeholder { color:var(--muted); font-weight:400; }
+.combo { position:relative; }
+.list { position:absolute; left:0; right:0; top:calc(100% + 4px); max-height:min(340px,50vh); overflow-y:auto; background:var(--field); border:1px solid var(--rule); border-radius:3px; margin:0; padding:4px; list-style:none; z-index:5; box-shadow:0 8px 24px rgba(0,0,0,.18); }
+.list .grp { font-size:.78rem; color:var(--muted); padding:8px 8px 2px; }
+.list .opt { padding:7px 8px; cursor:pointer; border-radius:2px; }
+.list .opt[aria-selected="true"] { background:var(--rule); }
+.list .none { padding:8px; color:var(--muted); font-size:.9rem; }
+.gh { position:absolute; top:16px; right:clamp(16px,3.5vw,44px); z-index:6; display:inline-flex; align-items:center; gap:8px; padding:7px 12px 7px 10px; border:1px solid var(--rule); border-radius:3px; background:var(--field); color:var(--ink); text-decoration:none; font-size:.9rem; font-weight:500; }
+.gh:hover { border-color:var(--ink); }
+.gh svg { width:18px; height:18px; fill:currentColor; }
+.join { display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--muted); cursor:pointer; }
+.join input { accent-color:var(--cut); width:16px; height:16px; margin:0; }
+.legend { color:var(--muted); font-size:.84rem; line-height:1.5; margin:0; max-width:44ch; }
+.legend .mark { display:inline-block; width:1.5px; height:.95em; background:var(--cut); vertical-align:-.12em; margin-inline:.2em; }
+
+.results { display:flex; flex-direction:column; min-width:0; }
+.block { padding-block:22px; border-top:1px solid var(--rule); display:flex; flex-direction:column; gap:12px; }
+.block:first-child { border-top:0; padding-top:4px; }
+.head { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 20px; }
+.head h2 { font:600 1rem var(--ui); margin:0; }
+.fig { font-variant-numeric:tabular-nums; color:var(--muted); font-size:.92rem; }
+.fig b { color:var(--ink); font-weight:600; font-size:1.3rem; margin-right:.3em; }
+.delta { font-variant-numeric:tabular-nums; font-size:.92rem; color:var(--worse); font-weight:500; }
+.delta.better { color:var(--muted); }
+.drop { all:unset; cursor:pointer; margin-left:auto; color:var(--muted); font-size:.85rem; text-decoration:underline; text-decoration-color:var(--rule); text-underline-offset:4px; }
+.drop:hover { color:var(--ink); text-decoration-color:var(--cut); }
+.drop:focus-visible { outline:2px solid var(--cut); outline-offset:3px; }
+.bar { height:4px; background:var(--rule); border-radius:2px; overflow:hidden; }
+.bar i { display:block; height:100%; width:0; background:var(--bar-them); transition:width .35s ease; }
+.block.us .bar i { background:var(--bar-us); }
+.flow { font:400 clamp(1.2rem,2.4vw,1.6rem)/2.1 var(--deva); white-space:pre-wrap; overflow-wrap:anywhere; min-height:2.1em; }
+.tk.cut { border-left:1.5px solid var(--cut); margin-left:.12em; padding-left:.12em; }
+.tk.partial { color:var(--muted); }
+.state { color:var(--muted); font-size:.92rem; }
+.state.err { color:var(--worse); }
+.empty { color:var(--muted); padding-block:8px; }
+
+.intro .tk.cut { animation:draw .6s ease-out both; animation-delay:calc(var(--n) * 16ms + .15s); }
+@keyframes draw { from { border-left-color:transparent; } }
+@media (prefers-reduced-motion:reduce) { .intro .tk.cut { animation:none; } .bar i { transition:none; } }
+
+@media (max-width:860px) {
+  .page { grid-template-columns:minmax(0,1fr); }
+  textarea { min-height:8rem; }
+}
+</style>
+</head>
+<body class="intro">
+<a class="gh" href="https://github.com/GranthaLLM/tokenizer" target="_blank" rel="noopener" aria-label="Grantha tokenizer on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a>
+<div class="page">
+  <aside class="rail">
+    <h1 lang="sa">ग्रन्थ</h1>
+    <p class="lede">Type Sanskrit or English and see where each tokenizer cuts it. Runs in your browser.</p>
+    <textarea id="in" lang="sa" spellcheck="false" placeholder="Paste or type text here" aria-label="Text to tokenize"></textarea>
+    <label class="join"><input type="checkbox" id="join" checked> Remove spaces between Devanagari words</label>
+    <div class="add">
+      <label for="q">Compare with</label>
+      <div class="combo"><input class="q" id="q" role="combobox" aria-expanded="false" aria-controls="list" aria-autocomplete="list" autocomplete="off" spellcheck="false" placeholder="Search Gemma, Llama, Qwen, Sarvam..."><ul class="list" id="list" role="listbox" hidden></ul></div>
+    </div>
+    <p class="legend">A red line <span class="mark"></span> is a cut inside a word. Gaps between words are real spaces and are not marked. A dotted circle ◌ stands for the missing letter in front of a vowel sign, and ▯ is a token that ends in the middle of a letter. Hover a token for its id.</p>
+  </aside>
+  <section class="results" id="results" aria-label="Tokens" aria-live="polite"></section>
+</div>
+
+<script type="module">
+import { PreTrainedTokenizer, AutoTokenizer, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2";
+env.allowLocalModels = false;
+
+const MAX = 1500;
+const OTHERS = [
+  ["gemma4", "Gemma 4", "Google", "google/gemma-4-12B-it"],
+  ["gemma3", "Gemma 3", "Google", "unsloth/gemma-3-4b-it"],
+  ["llama4", "Llama 4 Scout", "Meta", "unsloth/Llama-4-Scout-17B-16E-Instruct"],
+  ["llama3", "Llama 3", "Meta", "NousResearch/Meta-Llama-3-8B"],
+  ["qwen35", "Qwen 3.5", "Qwen", "Qwen/Qwen3.5-9B"],
+  ["qwen36", "Qwen 3.6", "Qwen", "Qwen/Qwen3.6-27B"],
+  ["qwen3", "Qwen 3", "Qwen", "Qwen/Qwen3-8B"],
+  ["mistral4", "Mistral Large 4", "Mistral", "mistralai/Mistral-Large-4-1T-A52B"],
+  ["deepseek", "DeepSeek V4.1", "DeepSeek", "deepseek-ai/DeepSeek-V4.1-Flash"],
+  ["glm", "GLM 5.3", "Z.ai", "zai-org/GLM-5.3"],
+  ["gptoss", "gpt-oss 20B", "OpenAI", "openai/gpt-oss-20b"],
+  ["olmo3", "Olmo 3", "Ai2", "allenai/Olmo-3-7B-Instruct"],
+  ["granite", "Granite 4.1", "IBM", "ibm-granite/granite-4.1-3b"],
+  ["nemotron", "Nemotron 3.5", "NVIDIA", "nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16"],
+  ["command", "Command A+", "Cohere", "CohereLabs/command-a-plus-05-2026-bf16"],
+  ["sarvam1", "Sarvam-1", "Indic", "sarvamai/sarvam-1"],
+  ["sarvamm", "Sarvam-M", "Indic", "sarvamai/sarvam-m"],
+  ["sarvam30", "Sarvam 30B", "Indic", "sarvamai/sarvam-30b"],
+  ["param2", "Param2", "Indic", "bharatgenai/Param2-17B-A2.4B-Thinking"],
+  ["krutrim", "Krutrim-2", "Indic", "krutrim-ai-labs/Krutrim-2-instruct"],
+  ["brahmic", "Brahmic 131K", "Indic", "theschoolofai/BrahmicTokenizer-131K"],
+];
+const DEFAULT_TEXT = "धाम्ना स्वेन सदा निरस्तकुहकं सत्यं परं धीमहि";
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const store = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const load = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+const state = new Map();
+const order = ["grantha"];
+let timer = null;
+
+function splitTokens(ids, decode) {
+  const out = []; let committed = "";
+  for (let k = 0; k < ids.length; k++) {
+    const cur = decode(ids.slice(0, k + 1));
+    if (cur.endsWith("�")) { out.push({ t: "▯", partial: true, id: ids[k] }); continue; }
+    out.push({ t: cur.slice(committed.length), partial: false, id: ids[k] });
+    committed = cur;
+  }
+  return out;
+}
+
+function tokenize(tk, text) {
+  const ids = Array.from(tk.encode(text, { add_special_tokens: false }));
+  return splitTokens(ids, (x) => tk.decode(x, { skip_special_tokens: false, clean_up_tokenization_spaces: false }));
+}
+
+function renderFlow(host, tokens) {
+  host.textContent = "";
+  let prevInWord = false, n = 0;
+  for (const tk of tokens) {
+    tk.t.split("\n").forEach((seg, si) => {
+      if (si > 0) { host.appendChild(document.createElement("br")); prevInWord = false; }
+      if (seg === "") return;
+      const lead = seg.match(/^[ \t]+/);
+      let body = lead ? seg.slice(lead[0].length) : seg;
+      if (lead) { host.appendChild(document.createTextNode(lead[0])); prevInWord = false; }
+      if (body === "") return;
+      if (/^\p{M}/u.test(body)) body = "◌" + body;
+      const s = el("span", "tk" + (prevInWord ? " cut" : "") + (tk.partial ? " partial" : ""), body);
+      s.title = "id " + tk.id;
+      s.style.setProperty("--n", n++);
+      host.appendChild(s);
+      prevInWord = true;
+    });
+  }
+}
+
+function block(key) {
+  let b = $("b-" + key);
+  if (b) return b;
+  const s = state.get(key);
+  b = el("div", "block" + (key === "grantha" ? " us" : "")); b.id = "b-" + key;
+  const head = el("div", "head");
+  head.appendChild(el("h2", "", s.name));
+  const fig = el("span", "fig"); fig.dataset.role = "fig"; head.appendChild(fig);
+  const delta = el("span", "delta"); delta.dataset.role = "delta"; head.appendChild(delta);
+  if (key !== "grantha") {
+    const d = el("button", "drop", "Remove"); d.type = "button";
+    d.addEventListener("click", () => remove(key));
+    head.appendChild(d);
+  }
+  const bar = el("div", "bar"); bar.appendChild(el("i"));
+  const flow = el("div", "flow"); flow.dataset.role = "flow"; flow.lang = "sa";
+  const st = el("div", "state"); st.dataset.role = "state";
+  b.append(head, bar, flow, st);
+  return b;
+}
+
+function layout() {
+  const host = $("results");
+  const want = order.map((k) => block(k));
+  want.forEach((b, i) => { if (host.children[i] !== b) host.insertBefore(b, host.children[i] || null); });
+  Array.from(host.children).forEach((c) => { if (!want.includes(c)) c.remove(); });
+}
+
+function paint() {
+  const raw = $("in").value.slice(0, MAX);
+  const text = $("join").checked ? raw.replace(/(?<=[\u0900-\u097F])[ \t]+(?=[\u0900-\u097F])/g, "") : raw;
+  const words = raw.split(/\s+/).filter(Boolean).length;
+  const g = state.get("grantha");
+  const maxCount = Math.max(1, ...order.map((k) => state.get(k).count || 0));
+  for (const key of order) {
+    const s = state.get(key), b = block(key);
+    const q = (r) => b.querySelector('[data-role="' + r + '"]');
+    const fig = q("fig"), delta = q("delta"), flow = q("flow"), st = q("state");
+    st.className = "state";
+    if (s.status === "loading") { st.textContent = "Loading " + s.name + " from Hugging Face. The first load can take a few seconds."; flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; continue; }
+    if (s.status === "error") { st.className = "state err"; st.textContent = s.name + " could not be loaded: " + s.error; flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; continue; }
+    st.textContent = "";
+    if (!text.trim()) { flow.textContent = ""; fig.textContent = ""; delta.textContent = ""; b.querySelector(".bar i").style.width = "0"; s.count = 0; continue; }
+    s.tokens = tokenize(s.tk, text); s.count = s.tokens.length;
+    renderFlow(flow, s.tokens);
+    fig.textContent = ""; fig.append(el("b", "", String(s.count)), document.createTextNode("tokens, " + (s.count / Math.max(words, 1)).toFixed(2) + " per word"));
+    if (key === "grantha" || !g.count) delta.textContent = "";
+    else {
+      const r = s.count / g.count;
+      delta.className = "delta" + (r < 1 ? " better" : "");
+      delta.textContent = r >= 1.005 ? "+" + Math.round((r - 1) * 100) + "% vs Grantha" : r <= 0.995 ? "-" + Math.round((1 - r) * 100) + "% vs Grantha" : "same as Grantha";
+    }
+  }
+  const m = Math.max(1, ...order.map((k) => state.get(k).count || 0));
+  for (const key of order) { const b = block(key); b.querySelector(".bar i").style.width = ((state.get(key).count || 0) / m * 100) + "%"; }
+}
+
+let active = -1, shown = [];
+function refreshAdd() { renderList(); }
+function renderList() {
+  const list = $("list"), q = $("q").value.trim().toLowerCase();
+  list.textContent = ""; shown = [];
+  let group = "";
+  OTHERS.forEach(([key, name, grp]) => {
+    if (order.includes(key)) return;
+    if (q && !(name + " " + grp).toLowerCase().includes(q)) return;
+    if (grp !== group) { group = grp; list.appendChild(el("li", "grp", grp)).setAttribute("role", "presentation"); }
+    const li = el("li", "opt", name); li.setAttribute("role", "option"); li.id = "opt-" + key; li.dataset.key = key;
+    li.addEventListener("mousedown", (e) => { e.preventDefault(); pick(key); });
+    list.appendChild(li); shown.push(li);
+  });
+  if (!shown.length) list.appendChild(el("li", "none", q ? "No tokenizer matches." : "All tokenizers are added."));
+  setActive(Math.min(Math.max(active, 0), shown.length - 1));
+}
+function setActive(i) {
+  active = i;
+  shown.forEach((li, k) => li.setAttribute("aria-selected", k === i ? "true" : "false"));
+  const q = $("q");
+  if (i >= 0 && shown[i]) { q.setAttribute("aria-activedescendant", shown[i].id); shown[i].scrollIntoView({ block: "nearest" }); } else q.removeAttribute("aria-activedescendant");
+}
+function openList(open) {
+  const list = $("list");
+  list.hidden = !open; $("q").setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) list.style.maxHeight = Math.min(340, Math.max(150, window.innerHeight - $("q").getBoundingClientRect().bottom - 20)) + "px";
+}
+function pick(key) { $("q").value = ""; openList(false); add(key); }
+
+function persist() { store("grantha.cmp", JSON.stringify(order.slice(1))); }
+
+async function add(key) {
+  if (order.includes(key)) return;
+  const def = OTHERS.find((o) => o[0] === key); if (!def) return;
+  state.set(key, { key, name: def[1], status: "loading", count: 0 });
+  order.push(key); layout(); refreshAdd(); persist(); paint();
+  try {
+    const tk = await AutoTokenizer.from_pretrained(def[3]);
+    state.get(key).tk = tk; state.get(key).status = "ready";
+  } catch (e) {
+    state.get(key).status = "error"; state.get(key).error = String(e && e.message || e).split("\n")[0].slice(0, 160);
+  }
+  paint();
+}
+
+function remove(key) {
+  const i = order.indexOf(key); if (i < 1) return;
+  order.splice(i, 1); state.delete(key); layout(); refreshAdd(); persist(); paint();
+}
+
+function autosize() { const t = $("in"); t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+function schedule() { autosize(); clearTimeout(timer); timer = setTimeout(() => { store("grantha.text", $("in").value); paint(); }, 160); }
+
+async function init() {
+  $("in").maxLength = MAX;
+  const saved = load("grantha.text");
+  $("in").value = saved ? saved : DEFAULT_TEXT;
+  state.set("grantha", { key: "grantha", name: "Grantha 128k", status: "loading", count: 0 });
+  layout(); refreshAdd(); paint();
+  $("in").addEventListener("input", schedule);
+  window.addEventListener("resize", autosize);
+  autosize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosize);
+  $("join").checked = load("grantha.join") !== "0";
+  $("join").addEventListener("change", () => { store("grantha.join", $("join").checked ? "1" : "0"); paint(); });
+  const q = $("q");
+  q.addEventListener("focus", () => { renderList(); openList(true); });
+  q.addEventListener("blur", () => openList(false));
+  q.addEventListener("input", () => { active = 0; renderList(); openList(true); });
+  q.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); openList(true); setActive(Math.min(active + 1, shown.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(Math.max(active - 1, 0)); }
+    else if (e.key === "Enter") { e.preventDefault(); if (shown[active]) pick(shown[active].dataset.key); }
+    else if (e.key === "Escape") { openList(false); q.blur(); }
+  });
+  try {
+    const [tj, cfg] = await Promise.all([fetch("models/grantha/tokenizer.json").then((r) => r.json()), fetch("models/grantha/tokenizer_config.json").then((r) => r.json())]);
+    const g = state.get("grantha"); g.tk = new PreTrainedTokenizer(tj, cfg); g.status = "ready";
+  } catch (e) {
+    const g = state.get("grantha"); g.status = "error"; g.error = String(e && e.message || e).slice(0, 160);
+  }
+  paint();
+  let keys = ["gemma4"];
+  try { const s = JSON.parse(load("grantha.cmp") || "null"); if (Array.isArray(s)) keys = s; } catch (e) {}
+  for (const k of keys) await add(k);
+  setTimeout(() => document.body.classList.remove("intro"), 2500);
+}
+init();
+</script>
+</body>
+</html>

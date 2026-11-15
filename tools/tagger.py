@@ -99,7 +99,7 @@ def synth(tr, n, rng):
     return list(out)
 
 
-def train(out="data/tagger2.pt", vocab_out="data/tagger2_vocab.json", hid=256, n_synth=900000, epochs=8, extra=None):
+def train(out="data/tagger2.pt", vocab_out="data/tagger2_vocab.json", hid=256, n_synth=900000, epochs=8, extra=None, long_boost=1):
     random.seed(0)
     torch.manual_seed(0)
     data = pickle.load(open("data/dcs_tagger_train.pkl", "rb"))
@@ -110,6 +110,8 @@ def train(out="data/tagger2.pt", vocab_out="data/tagger2_vocab.json", hid=256, n
         tr = list(dict.fromkeys(tr + list(pickle.load(open(extra, "rb")).keys())))
     if n_synth:
         tr = tr + synth(tr, n_synth, random.Random(1))
+    if long_boost > 1:
+        tr = tr + [it for it in tr if len(it[0]) >= 24 and it[1]] * (long_boost - 1)
     chars = sorted({c for w, _ in tr for c in w})
     vocab = {c: i + 2 for i, c in enumerate(chars)}
     json.dump(vocab, open(vocab_out, "w", encoding="utf-8"), ensure_ascii=False)
@@ -156,7 +158,9 @@ def train(out="data/tagger2.pt", vocab_out="data/tagger2_vocab.json", hid=256, n
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "t5":
+    if len(sys.argv) > 1 and sys.argv[1] == "t6":
+        train("data/tagger6.pt", "data/tagger6_vocab.json", hid=256, n_synth=0, epochs=10, extra="data/teacher_train.pkl", long_boost=3)
+    elif len(sys.argv) > 1 and sys.argv[1] == "t5":
         train("data/tagger5.pt", "data/tagger5_vocab.json", hid=192, n_synth=0, epochs=8, extra="data/teacher_train.pkl")
     elif len(sys.argv) > 1 and sys.argv[1] == "teacher":
         train("data/tagger4.pt", "data/tagger4_vocab.json", hid=192, n_synth=0, epochs=8, extra="data/teacher_train.pkl")
