@@ -66,9 +66,47 @@ When it finishes, tell the user the output is `data/resolve_labels.pkl` (do not 
 rsync -av <pc>:<repo path>/data/resolve_labels.pkl data/
 ```
 
+## 3. Base-model bits per byte (quick, run any time, about 10 minutes)
+
+Goal: which base model starts closest to Sanskrit, with no training. Forward pass only, on held-out DCS text in `benchmark/heldout_text.parquet` (already in git). Decides the pretraining base for Prathosh.
+
+```bash
+for m in google/gemma-4-12B Qwen/Qwen3.5-9B-Base google/gemma-4-E4B Qwen/Qwen3.5-4B-Base; do
+  python tools/model_bpb.py $m
+done
+```
+
+Each run writes `results/model_bpb/<model>.json`. If a 12B or 9B model runs out of memory, add `--ctx 1024` for all four, identically. The 31B and 26B-A4B models do not fit in 24 GB at bf16, skip them. Commit `results/model_bpb/*.json` and push.
+
+## 4. Tokenizer transplant (embedding-only, decisive for the tokenizer question)
+
+Goal: does the Grantha 128k vocabulary work inside a pretrained model? `tools/transplant.py` swaps the tokenizer into Qwen3-0.6B-Base, trains only the embedding matrix, and tracks DCS bits per byte. `native` is the control with the original tokenizer, same data and steps. The Mac was too slow and out of memory (about 380 tok/s), so only a 40,960 token smoke run exists: grantha 1.5211 before training, 1.4734 after.
+
+Needs `data/pool/train.parquet` (1 GB, not in git). Check it exists, else ask the user to run on the Mac: `rsync -av data/pool/train.parquet <pc>:<repo path>/data/pool/`
+
+```bash
+python tools/transplant.py native --tokens 20000000 --eval-every 2000000
+python tools/transplant.py grantha --tokens 20000000 --eval-every 2000000
+```
+
+Run native first, then grantha, same settings. Writes `results/transplant/{native,grantha}.json` with the bits per byte curve. Commit and push those. Do not change the learning rate or batch settings; if out of memory, only lower BATCH and raise ACC so the effective batch stays 8 sequences.
+
+## 5. Serve MITRA-Qwen 9B (so the Mac can run the translation eval against it)
+
+Goal: score `buddhist-nlp/mitra-qwen35-translate` (Apache-2.0, Qwen3.5-9B fine-tuned by Dharmamitra, top of their Sanskrit leaderboard) on our verses. The eval harness runs on the Mac and calls an OpenAI-compatible API, so this machine only serves the model. Weights are about 18 GB at bf16, which fits the 3090.
+
+```bash
+pip install -U vllm      # Qwen3.5 needs a recent vllm; if loading fails, upgrade vllm and transformers
+vllm serve buddhist-nlp/mitra-qwen35-translate --dtype bfloat16 --max-model-len 4096 --port 8000
+```
+
+Keep it running (tmux). Tell the user when it prints that the server is up. The user then tunnels from the Mac with `ssh -L 8000:localhost:8000 <pc>` and runs the eval there. Do not run the eval on this machine.
+
 ## What to report
 
 1. GPU name and whether the three proxy runs finished.
 2. The bits per byte table.
 3. The labeling speed and whether it finished.
-4. Anything you had to change to make the scripts run.
+4. Base-model bits per byte table (step 3) and the transplant curves for native vs grantha (step 4).
+5. Whether the MITRA server is up (step 5).
+6. Anything you had to change to make the scripts run.
